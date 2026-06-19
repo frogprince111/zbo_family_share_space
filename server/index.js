@@ -104,6 +104,12 @@ function cleanThemeColor(value, fallback) {
   return themeColors.has(value) ? value : fallback || 'purple'
 }
 
+function cleanAvatar(value, fallback) {
+  const avatar = typeof value === 'string' ? value : ''
+  if (!avatar) return fallback || ''
+  return avatar.length <= 300_000 ? avatar : fallback || ''
+}
+
 function broadcast() {
   const payload = `data: ${JSON.stringify({ visitors: serializeVisitors() })}\n\n`
   for (const client of clients) {
@@ -138,7 +144,7 @@ function upsertVisitor(body, req) {
     name: cleanText(body.name, current?.name || '家人'),
     device: cleanText(body.device, current?.device || fallbackDevice),
     themeColor: cleanThemeColor(body.themeColor, current?.themeColor),
-    avatar: cleanLongText(body.avatar, current?.avatar || '', 1_500_000),
+    avatar: cleanAvatar(body.avatar, current?.avatar),
     role: cleanText(body.role, current?.role || '家庭成员'),
     birthday: cleanText(body.birthday, current?.birthday || ''),
     lastSeenAt: Date.now(),

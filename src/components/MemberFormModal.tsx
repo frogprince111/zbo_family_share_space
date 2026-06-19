@@ -3,7 +3,7 @@ import type { ChangeEvent, CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { isNativeImagePickerAvailable, pickAvatar } from '../services/imagePicker'
 import type { FamilyMember, ThemeColor } from '../types/member'
-import { fileToBase64, getInitial, roleOptions, themeColorMap, themeOptions, validateAvatarFile } from '../utils/avatar'
+import { compressImageFile, getInitial, roleOptions, themeColorMap, themeOptions, validateAvatarFile } from '../utils/avatar'
 
 type MemberFormModalProps = {
   open: boolean
@@ -76,7 +76,7 @@ export function MemberFormModal({ open, member, onClose, onSave, onDelete, onErr
       return
     }
     try {
-      const avatar = await fileToBase64(file)
+      const avatar = await compressImageFile(file)
       setForm((current) => ({ ...current, avatar }))
     } catch {
       onError('头像读取失败')

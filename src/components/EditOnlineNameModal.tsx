@@ -1,7 +1,7 @@
 import { Camera, Check, X } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { fileToBase64, getInitial, validateAvatarFile } from '../utils/avatar'
+import { compressImageFile, getInitial, validateAvatarFile } from '../utils/avatar'
 
 type EditOnlineNameModalProps = {
   open: boolean
@@ -50,7 +50,7 @@ export function EditOnlineNameModal({ open, name, avatar, role = '家庭成员',
       return
     }
     try {
-      setDraftAvatar(await fileToBase64(file))
+      setDraftAvatar(await compressImageFile(file))
     } catch {
       onError('头像读取失败')
     }

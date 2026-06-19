@@ -22,6 +22,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
+  clearAvatarCache = () => {
+    try {
+      window.localStorage.removeItem('family-online-visitor-avatar')
+      window.localStorage.removeItem('family-online-local-visitors')
+
+      const memberRaw = window.localStorage.getItem('family-members')
+      if (memberRaw) {
+        const members = JSON.parse(memberRaw) as Array<{ avatar?: string }>
+        window.localStorage.setItem('family-members', JSON.stringify(members.map((member) => ({ ...member, avatar: '' }))))
+      }
+    } catch {
+      window.localStorage.clear()
+    }
+    window.location.reload()
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -35,6 +51,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               onClick={() => window.location.reload()}
             >
               重新加载
+            </button>
+            <button
+              type="button"
+              className="mt-3 block w-full rounded-2xl bg-slate-100 px-5 py-3 text-sm font-bold text-family-text"
+              onClick={this.clearAvatarCache}
+            >
+              清理头像缓存并重载
             </button>
           </section>
         </main>

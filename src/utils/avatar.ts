@@ -25,9 +25,51 @@ export function fileToBase64(file: File): Promise<string> {
   })
 }
 
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('图片加载失败'))
+    image.src = src
+  })
+}
+
+function canvasToDataUrl(canvas: HTMLCanvasElement, quality: number) {
+  return canvas.toDataURL('image/jpeg', quality)
+}
+
+export async function compressImageFile(file: File, maxSize = 320, quality = 0.78) {
+  const source = await fileToBase64(file)
+  const image = await loadImage(source)
+  const ratio = Math.min(maxSize / image.width, maxSize / image.height, 1)
+  const width = Math.max(1, Math.round(image.width * ratio))
+  const height = Math.max(1, Math.round(image.height * ratio))
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('图片压缩失败')
+  context.drawImage(image, 0, 0, width, height)
+  return canvasToDataUrl(canvas, quality)
+}
+
+export async function compressDataUrl(dataUrl: string, maxSize = 320, quality = 0.78) {
+  const image = await loadImage(dataUrl)
+  const ratio = Math.min(maxSize / image.width, maxSize / image.height, 1)
+  const width = Math.max(1, Math.round(image.width * ratio))
+  const height = Math.max(1, Math.round(image.height * ratio))
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('图片压缩失败')
+  context.drawImage(image, 0, 0, width, height)
+  return canvasToDataUrl(canvas, quality)
+}
+
 export function validateAvatarFile(file: File) {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) return '不支持该图片格式'
-  if (file.size > 2 * 1024 * 1024) return '图片大小不能超过 2MB'
+  if (file.size > 8 * 1024 * 1024) return '图片大小不能超过 8MB'
   return ''
 }

@@ -20,6 +20,7 @@ const visitorRoleKey = 'family-online-visitor-role'
 const visitorBirthdayKey = 'family-online-visitor-birthday'
 const localVisitorsKey = 'family-online-local-visitors'
 const themeColors: ThemeColor[] = ['pink', 'purple', 'blue', 'yellow', 'green', 'orange']
+const maxAvatarLength = 300_000
 
 function createVisitorId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -45,7 +46,12 @@ function readVisitorName() {
 }
 
 function readVisitorAvatar() {
-  return window.localStorage.getItem(visitorAvatarKey) || ''
+  const avatar = window.localStorage.getItem(visitorAvatarKey) || ''
+  if (avatar.length > maxAvatarLength) {
+    window.localStorage.removeItem(visitorAvatarKey)
+    return ''
+  }
+  return avatar
 }
 
 function readVisitorRole() {
@@ -70,15 +76,23 @@ function pickThemeColor(id: string) {
 function readLocalVisitors() {
   try {
     const raw = window.localStorage.getItem(localVisitorsKey)
-    return raw ? (JSON.parse(raw) as OnlineVisitor[]) : []
+    const visitors = raw ? (JSON.parse(raw) as OnlineVisitor[]) : []
+    return visitors.map((visitor) => ({
+      ...visitor,
+      avatar: visitor.avatar && visitor.avatar.length <= maxAvatarLength ? visitor.avatar : '',
+    }))
   } catch {
     return []
   }
 }
 
 function writeLocalVisitor(visitor: OnlineVisitor) {
+  const safeVisitor = {
+    ...visitor,
+    avatar: visitor.avatar && visitor.avatar.length <= maxAvatarLength ? visitor.avatar : '',
+  }
   const visitors = readLocalVisitors().filter((item) => item.id !== visitor.id)
-  window.localStorage.setItem(localVisitorsKey, JSON.stringify([visitor, ...visitors].slice(0, 8)))
+  window.localStorage.setItem(localVisitorsKey, JSON.stringify([safeVisitor, ...visitors].slice(0, 8)))
   window.dispatchEvent(new Event('family-online-visitors-updated'))
 }
 
@@ -203,8 +217,18 @@ export function useOnlineVisitors() {
   )
 
   const updateVisitorAvatar = useCallback((avatar: string) => {
-    window.localStorage.setItem(visitorAvatarKey, avatar)
-    setVisitorAvatar(avatar)
+    const safeAvatar = avatar.length <= maxAvatarLength ? avatar : ''
+    try {
+      if (safeAvatar) {
+        window.localStorage.setItem(visitorAvatarKey, safeAvatar)
+      } else {
+        window.localStorage.removeItem(visitorAvatarKey)
+      }
+      setVisitorAvatar(safeAvatar)
+    } catch {
+      window.localStorage.removeItem(visitorAvatarKey)
+      setVisitorAvatar('')
+    }
   }, [])
 
   const updateVisitorRole = useCallback((role: string) => {

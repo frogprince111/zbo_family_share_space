@@ -1,7 +1,8 @@
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera'
 import { Capacitor } from '@capacitor/core'
+import { compressDataUrl } from '../utils/avatar'
 
-const maxAvatarBytes = 2 * 1024 * 1024
+const maxAvatarBytes = 250 * 1024
 
 export function isNativeImagePickerAvailable() {
   return Capacitor.isNativePlatform()
@@ -28,8 +29,9 @@ async function getAvatar(source: CameraSource) {
 
   const dataUrl = photo.dataUrl
   if (!dataUrl) throw new Error('头像读取失败')
-  if (estimateDataUrlBytes(dataUrl) > maxAvatarBytes) throw new Error('图片大小不能超过 2MB')
-  return dataUrl
+  const compressed = await compressDataUrl(dataUrl)
+  if (estimateDataUrlBytes(compressed) > maxAvatarBytes) throw new Error('头像压缩失败，请换一张图片')
+  return compressed
 }
 
 export async function pickFromGallery() {
