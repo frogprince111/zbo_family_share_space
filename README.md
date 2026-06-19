@@ -99,6 +99,24 @@ npm run build
 npm run preview
 ```
 
+## 固定网页访问链接
+
+项目已配置 Render 静态站点部署。将仓库导入 Render 后，Render 会执行 `npm ci && npm run build` 并发布 `dist`。
+
+Render 发布后会生成固定公网地址，通常类似：
+
+```text
+https://zbo-family-share-space.onrender.com
+```
+
+Render 新建服务时选择：
+
+```text
+New -> Static Site -> frogprince111/zbo_family_share_space
+```
+
+仓库中的 `render.yaml` 已包含构建命令和发布目录配置。
+
 ## 手机 App 构建
 
 项目已使用 Capacitor 封装为 Android 和 iOS App，同时保留网页端运行能力。
