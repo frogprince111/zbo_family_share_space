@@ -49,6 +49,13 @@ select:focus-visible {
   padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
+.chat-page-shell {
+  height: calc(100dvh - 96px - env(safe-area-inset-bottom));
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
 .party-popper-left {
   animation: party-pop-left 3s ease-out both;
 }

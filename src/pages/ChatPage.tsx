@@ -1,4 +1,4 @@
-import { ArrowLeft, ImagePlus, Mic, SendHorizontal, Square, UsersRound } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ImagePlus, Mic, SendHorizontal, Square, UsersRound } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -28,6 +28,7 @@ export default function ChatPage(_props: ChatPageProps) {
   const realtimeChat = useRealtimeChat()
   const [draft, setDraft] = useState('')
   const [recording, setRecording] = useState(false)
+  const [membersExpanded, setMembersExpanded] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -159,9 +160,9 @@ export default function ChatPage(_props: ChatPageProps) {
   }
 
   return (
-    <PageContainer>
-      <section className="overflow-hidden rounded-[24px] border border-family-border bg-white shadow-soft">
-        <header className="border-b border-family-border bg-white px-4 py-4 sm:px-6">
+    <PageContainer className="chat-page-shell">
+      <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-family-border bg-white shadow-soft">
+        <header className="shrink-0 border-b border-family-border bg-white px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -177,22 +178,36 @@ export default function ChatPage(_props: ChatPageProps) {
                 {onlineMembers.length} 位在线 · {realtimeChat.cloudEnabled ? '实时群聊' : '本机预览'}
               </p>
             </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-family-primarySoft text-family-primary">
+            <button
+              type="button"
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-family-primarySoft text-family-primary active:scale-95"
+              aria-label={membersExpanded ? '收起在线成员' : '展开在线成员'}
+              onClick={() => setMembersExpanded((value) => !value)}
+            >
               <UsersRound size={21} />
-            </div>
+            </button>
           </div>
 
-          <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
+          <button
+            type="button"
+            className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1 rounded-full bg-slate-50 px-3 py-2 text-xs font-bold text-family-muted active:scale-[0.99] sm:hidden"
+            onClick={() => setMembersExpanded((value) => !value)}
+          >
+            {membersExpanded ? '收起在线成员' : '展开在线成员'}
+            <ChevronDown size={16} className={`transition ${membersExpanded ? 'rotate-180' : ''}`} />
+          </button>
+
+          <div className={`${membersExpanded ? 'mt-3 flex' : 'hidden'} gap-3 overflow-x-auto pb-1 sm:mt-4 sm:flex`}>
             {onlineMembers.map((member) => (
-              <div key={member.id} className="min-w-[72px] text-center">
-                <MemberAvatar member={member} size="md" showStatusDot={false} isOnline={onlinePresence[member.id] ?? false} />
-                <p className="mt-2 truncate text-xs font-bold text-family-text">{member.name}</p>
+              <div key={member.id} className="min-w-[54px] text-center sm:min-w-[72px]">
+                <MemberAvatar member={member} size="sm" showStatusDot={false} isOnline={onlinePresence[member.id] ?? false} />
+                <p className="mt-1 truncate text-[11px] font-bold text-family-text sm:mt-2 sm:text-xs">{member.name}</p>
               </div>
             ))}
           </div>
         </header>
 
-        <div className="relative h-[58vh] overflow-y-auto bg-[#fbfaf7] px-4 py-5 sm:px-6">
+        <div className="relative min-h-0 flex-1 overflow-y-auto bg-[#fbfaf7] px-4 py-4 sm:px-6 sm:py-5">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="select-none text-center text-5xl font-black tracking-[0.25em] text-family-primary/10 sm:text-7xl">
               家和万事兴
@@ -216,7 +231,7 @@ export default function ChatPage(_props: ChatPageProps) {
 
             return (
               <div key={message.id} className={`mb-5 flex gap-3 ${isMine ? 'flex-row-reverse' : ''}`}>
-                <MemberAvatar member={sender} size="md" showStatusDot={false} isOnline={onlinePresence[sender.id] ?? false} />
+                <MemberAvatar member={sender} size="sm" showStatusDot={false} isOnline={onlinePresence[sender.id] ?? false} />
                 <div className={`max-w-[72%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
                   <div className={`mb-1 flex items-center gap-2 text-xs font-semibold text-family-muted ${isMine ? 'flex-row-reverse' : ''}`}>
                     <span>{sender.name}</span>
@@ -245,7 +260,7 @@ export default function ChatPage(_props: ChatPageProps) {
           </div>
         </div>
 
-        <footer className="border-t border-family-border bg-white p-4 sm:p-5">
+        <footer className="shrink-0 border-t border-family-border bg-white p-3 sm:p-5">
           <div className="flex items-end gap-3">
             <button
               type="button"
