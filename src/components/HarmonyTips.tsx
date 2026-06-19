@@ -5,9 +5,10 @@ import { HarmonyTipCard } from './HarmonyTipCard'
 
 type HarmonyTipsProps = {
   onOpenChoreDice: () => void
+  onOpenActivity: () => void
 }
 
-export function HarmonyTips({ onOpenChoreDice }: HarmonyTipsProps) {
+export function HarmonyTips({ onOpenChoreDice, onOpenActivity }: HarmonyTipsProps) {
   const shuffledTips = useMemo(() => [...harmonyTips].sort(() => Math.random() - 0.5), [])
 
   return (
@@ -23,7 +24,11 @@ export function HarmonyTips({ onOpenChoreDice }: HarmonyTipsProps) {
       </div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-5 lg:gap-6">
         {shuffledTips.map((tip) => (
-          <HarmonyTipCard key={tip.id} tip={tip} onClick={tip.id === 'chores' ? onOpenChoreDice : undefined} />
+          <HarmonyTipCard
+            key={tip.id}
+            tip={tip}
+            onClick={tip.id === 'chores' ? onOpenChoreDice : tip.id === 'activity' ? onOpenActivity : undefined}
+          />
         ))}
       </div>
     </section>

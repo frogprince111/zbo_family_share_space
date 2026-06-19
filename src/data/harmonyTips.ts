@@ -9,9 +9,9 @@ export const harmonyTips: HarmonyTip[] = [
     theme: 'purple',
   },
   {
-    id: 'dinner',
-    title: '一起用餐',
-    description: '共进一餐，亲情更浓厚。',
+    id: 'activity',
+    title: '家庭活动',
+    description: '一起计划，大家接龙参加。',
     icon: 'utensils',
     theme: 'yellow',
   },

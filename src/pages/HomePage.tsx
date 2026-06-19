@@ -2,13 +2,16 @@ import { useCallback, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import { ConfirmModal } from '../components/ConfirmModal'
 import { ChoreDiceModal } from '../components/ChoreDiceModal'
+import { EditOnlineNameModal } from '../components/EditOnlineNameModal'
+import { FamilyActivityModal } from '../components/FamilyActivityModal'
 import { FamilyMembers } from '../components/FamilyMembers'
 import { HarmonyTips } from '../components/HarmonyTips'
 import { Header } from '../components/Header'
 import { MemberFormModal } from '../components/MemberFormModal'
-import { OnlineVisitorsPanel } from '../components/OnlineVisitorsPanel'
 import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
+import type { ActivityEvent } from '../hooks/useFamilyActivities'
+import { useFamilyActivities } from '../hooks/useFamilyActivities'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
 import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
 import type { FamilyMember, FamilyProfile } from '../types/member'
@@ -20,17 +23,40 @@ type HomePageProps = {
   familyProfile: FamilyProfile
 }
 
-export default function HomePage({ members, setMembers, memberPresence, familyProfile }: HomePageProps) {
+export default function HomePage({ members, setMembers, familyProfile }: HomePageProps) {
   const [toast, setToast] = useState<ToastState>(null)
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<FamilyMember | null>(null)
   const [choreDiceOpen, setChoreDiceOpen] = useState(false)
+  const [onlineNameOpen, setOnlineNameOpen] = useState(false)
+  const [activityOpen, setActivityOpen] = useState(false)
   const onlineVisitors = useOnlineVisitors()
-
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
   }, [])
+
+  const handleActivityEvent = useCallback(
+    (event: ActivityEvent) => {
+      if (event.event === 'created' && event.activity && event.activity.creatorId !== onlineVisitors.currentVisitorId) {
+        showToast(`${event.activity.creatorName} 创建了活动：${event.activity.title}`)
+      }
+    },
+    [onlineVisitors.currentVisitorId, showToast],
+  )
+  const familyActivities = useFamilyActivities(handleActivityEvent)
+  const onlineMembers = onlineVisitors.visitors.map<FamilyMember>((visitor) => ({
+    id: visitor.id,
+    name: visitor.name,
+    role: visitor.device,
+    themeColor: visitor.themeColor,
+    avatar: visitor.avatar,
+    createdAt: visitor.lastSeenAt,
+  }))
+  const onlinePresence = onlineMembers.reduce<MemberPresenceMap>((next, member) => {
+    next[member.id] = true
+    return next
+  }, {})
 
   const handleSave = (member: FamilyMember) => {
     setMembers((current) => {
@@ -54,27 +80,51 @@ export default function HomePage({ members, setMembers, memberPresence, familyPr
   return (
     <PageContainer>
       <Header spaceName={familyProfile.spaceName} address={familyProfile.address} onNotify={() => showToast('暂无新通知')} />
-      <HarmonyTips onOpenChoreDice={() => setChoreDiceOpen(true)} />
+      <HarmonyTips onOpenChoreDice={() => setChoreDiceOpen(true)} onOpenActivity={() => setActivityOpen(true)} />
       <FamilyMembers
-        members={members}
-        memberPresence={memberPresence}
+        members={onlineMembers}
+        memberPresence={onlinePresence}
+        showAddButton={false}
+        editableMemberIds={[onlineVisitors.currentVisitorId]}
+        emptyMessage={onlineVisitors.cloudEnabled ? '当前还没有在线成员' : '正在连接在线成员...'}
         onAdd={() => {
           setEditingMember(null)
           setFormOpen(true)
         }}
         onEdit={(member) => {
-          setEditingMember(member)
-          setFormOpen(true)
+          if (member.id === onlineVisitors.currentVisitorId) setOnlineNameOpen(true)
         }}
       />
-      <OnlineVisitorsPanel
-        visitors={onlineVisitors.visitors}
-        currentVisitorId={onlineVisitors.currentVisitorId}
-        visitorName={onlineVisitors.visitorName}
-        cloudEnabled={onlineVisitors.cloudEnabled}
-        onRename={(name) => {
-          onlineVisitors.updateVisitorName(name)
-          showToast('在线名称已更新')
+      <EditOnlineNameModal
+        open={onlineNameOpen}
+        name={onlineVisitors.visitorName}
+        avatar={onlineVisitors.visitorAvatar}
+        onClose={() => setOnlineNameOpen(false)}
+        onError={(message) => showToast(message, 'error')}
+        onSave={(profile) => {
+          onlineVisitors.updateVisitorName(profile.name)
+          onlineVisitors.updateVisitorAvatar(profile.avatar ?? '')
+          setOnlineNameOpen(false)
+          showToast('在线资料已同步')
+        }}
+      />
+      <FamilyActivityModal
+        open={activityOpen}
+        activities={familyActivities.activities}
+        currentUser={{ id: onlineVisitors.currentVisitorId, name: onlineVisitors.visitorName }}
+        onClose={() => setActivityOpen(false)}
+        onError={(message) => showToast(message, 'error')}
+        onCreate={(activity) => {
+          familyActivities.createActivity({
+            ...activity,
+            creatorId: onlineVisitors.currentVisitorId,
+            creatorName: onlineVisitors.visitorName,
+          })
+          showToast('活动已创建，已通知在线成员')
+        }}
+        onJoin={(id) => {
+          familyActivities.joinActivity(id, onlineVisitors.currentVisitorId, onlineVisitors.visitorName)
+          showToast('接龙成功')
         }}
       />
       <MemberFormModal

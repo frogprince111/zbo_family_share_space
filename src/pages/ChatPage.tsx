@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MemberAvatar } from '../components/MemberAvatar'
 import { PageContainer } from '../components/PageContainer'
-import { useLocalStorage } from '../hooks/useLocalStorage'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
+import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
+import { useRealtimeChat } from '../hooks/useRealtimeChat'
 import type { FamilyMember, FamilyProfile } from '../types/member'
 import { fileToBase64 } from '../utils/avatar'
 
@@ -15,33 +16,15 @@ type ChatPageProps = {
   familyProfile: FamilyProfile
 }
 
-type ChatMessage = {
-  id: string
-  memberId: string
-  type: 'text' | 'image' | 'audio'
-  text?: string
-  src?: string
-  createdAt: string
-}
-
-const defaultMessages: ChatMessage[] = [
-  {
-    id: 'welcome',
-    memberId: 'system',
-    type: 'text',
-    text: '家庭群聊已开启，今天也要好好说话。',
-    createdAt: '2026-06-18T09:00:00.000Z',
-  },
-]
-
 function formatMessageTime(value: string) {
   const date = new Date(value)
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-export default function ChatPage({ members, memberPresence, familyProfile }: ChatPageProps) {
+export default function ChatPage(_props: ChatPageProps) {
   const navigate = useNavigate()
-  const [messages, setMessages] = useLocalStorage<ChatMessage[]>('family-group-chat-messages', defaultMessages)
+  const onlineVisitors = useOnlineVisitors()
+  const realtimeChat = useRealtimeChat()
   const [draft, setDraft] = useState('')
   const [recording, setRecording] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -49,34 +32,58 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
 
-  const currentMember = useMemo(() => {
-    return members.find((member) => member.id === familyProfile.currentMemberId) ?? members[0] ?? null
-  }, [familyProfile.currentMemberId, members])
+  const onlineMembers = useMemo(
+    () =>
+      onlineVisitors.visitors.map<FamilyMember>((visitor) => ({
+        id: visitor.id,
+        name: visitor.name,
+        role: visitor.device,
+        avatar: visitor.avatar,
+        themeColor: visitor.themeColor,
+        createdAt: visitor.lastSeenAt,
+      })),
+    [onlineVisitors.visitors],
+  )
+
+  const currentMember = useMemo<FamilyMember>(() => {
+    const current = onlineVisitors.currentVisitor
+    return {
+      id: current.id,
+      name: current.name,
+      role: current.device,
+      avatar: current.avatar,
+      themeColor: current.themeColor,
+      createdAt: current.lastSeenAt,
+    }
+  }, [onlineVisitors.currentVisitor])
 
   const memberMap = useMemo(() => {
-    return members.reduce<Record<string, FamilyMember>>((result, member) => {
+    return onlineMembers.reduce<Record<string, FamilyMember>>((result, member) => {
       result[member.id] = member
       return result
     }, {})
-  }, [members])
+  }, [onlineMembers])
+
+  const onlinePresence = useMemo(() => {
+    return onlineMembers.reduce<MemberPresenceMap>((result, member) => {
+      result[member.id] = true
+      return result
+    }, {})
+  }, [onlineMembers])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages])
+  }, [realtimeChat.messages])
 
   const sendMessage = () => {
     const text = draft.trim()
     if (!text || !currentMember) return
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        memberId: currentMember.id,
-        type: 'text',
-        text,
-        createdAt: new Date().toISOString(),
-      },
-    ])
+    realtimeChat.sendMessage({
+      id: crypto.randomUUID(),
+      memberId: currentMember.id,
+      type: 'text',
+      text,
+    })
     setDraft('')
   }
 
@@ -86,17 +93,13 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
     if (!file || !currentMember) return
     if (!file.type.startsWith('image/')) return
     const src = await fileToBase64(file)
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        memberId: currentMember.id,
-        type: 'image',
-        src,
-        text: file.name,
-        createdAt: new Date().toISOString(),
-      },
-    ])
+    realtimeChat.sendMessage({
+      id: crypto.randomUUID(),
+      memberId: currentMember.id,
+      type: 'image',
+      src,
+      text: file.name,
+    })
   }
 
   const stopRecording = () => {
@@ -135,17 +138,13 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
         reader.onerror = () => reject(new Error('语音读取失败'))
         reader.readAsDataURL(blob)
       })
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          memberId: currentMember.id,
-          type: 'audio',
-          src,
-          text: '语音消息',
-          createdAt: new Date().toISOString(),
-        },
-      ])
+      realtimeChat.sendMessage({
+        id: crypto.randomUUID(),
+        memberId: currentMember.id,
+        type: 'audio',
+        src,
+        text: '语音消息',
+      })
       audioChunksRef.current = []
       mediaRecorderRef.current = null
     }
@@ -168,7 +167,9 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
             </button>
             <div className="min-w-0 flex-1 text-center">
               <h1 className="truncate text-xl font-black text-family-text">家庭群聊</h1>
-              <p className="mt-1 text-xs font-semibold text-family-muted">{members.length} 位成员</p>
+              <p className="mt-1 text-xs font-semibold text-family-muted">
+                {onlineMembers.length} 位在线 · {realtimeChat.cloudEnabled ? '实时群聊' : '本机预览'}
+              </p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-family-primarySoft text-family-primary">
               <UsersRound size={21} />
@@ -176,9 +177,9 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
           </div>
 
           <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-            {members.map((member) => (
+            {onlineMembers.map((member) => (
               <div key={member.id} className="min-w-[72px] text-center">
-                <MemberAvatar member={member} size="md" showStatusDot={false} isOnline={memberPresence[member.id] ?? false} />
+                <MemberAvatar member={member} size="md" showStatusDot={false} isOnline={onlinePresence[member.id] ?? false} />
                 <p className="mt-2 truncate text-xs font-bold text-family-text">{member.name}</p>
               </div>
             ))}
@@ -192,10 +193,10 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
             </span>
           </div>
           <div className="relative z-10">
-          {messages.map((message) => {
+          {realtimeChat.messages.map((message) => {
             const isSystem = message.memberId === 'system'
             const sender = memberMap[message.memberId]
-            const isMine = currentMember?.id === message.memberId
+            const isMine = currentMember.id === message.memberId
 
             if (isSystem) {
               return (
@@ -209,7 +210,7 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
 
             return (
               <div key={message.id} className={`mb-5 flex gap-3 ${isMine ? 'flex-row-reverse' : ''}`}>
-                <MemberAvatar member={sender} size="md" showStatusDot={false} isOnline={memberPresence[sender.id] ?? false} />
+                <MemberAvatar member={sender} size="md" showStatusDot={false} isOnline={onlinePresence[sender.id] ?? false} />
                 <div className={`max-w-[72%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
                   <div className={`mb-1 flex items-center gap-2 text-xs font-semibold text-family-muted ${isMine ? 'flex-row-reverse' : ''}`}>
                     <span>{sender.name}</span>
@@ -265,7 +266,7 @@ export default function ChatPage({ members, memberPresence, familyProfile }: Cha
               value={draft}
               rows={1}
               maxLength={300}
-              placeholder={currentMember ? `以 ${currentMember.name} 的身份发消息` : '请先添加家庭成员'}
+              placeholder={`以 ${currentMember.name} 的身份发消息`}
               className="max-h-28 min-h-12 flex-1 resize-none rounded-2xl border border-family-border bg-slate-50 px-4 py-3 text-sm font-semibold text-family-text outline-none placeholder:text-slate-400 focus:border-family-primary"
               disabled={!currentMember}
               onChange={(event) => setDraft(event.target.value)}

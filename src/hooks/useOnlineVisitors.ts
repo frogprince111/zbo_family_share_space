@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import type { ThemeColor } from '../types/member'
+
 export type OnlineVisitor = {
   id: string
   name: string
   device: string
+  themeColor: ThemeColor
+  avatar?: string
   lastSeenAt: string
 }
 
 const visitorIdKey = 'family-online-visitor-id'
 const visitorNameKey = 'family-online-visitor-name'
+const visitorAvatarKey = 'family-online-visitor-avatar'
 const localVisitorsKey = 'family-online-local-visitors'
+const themeColors: ThemeColor[] = ['pink', 'purple', 'blue', 'yellow', 'green', 'orange']
 
 function createVisitorId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -34,10 +40,19 @@ function readVisitorName() {
   return fallback
 }
 
+function readVisitorAvatar() {
+  return window.localStorage.getItem(visitorAvatarKey) || ''
+}
+
 function detectDevice() {
   if (/iPhone|Android|Mobile/i.test(navigator.userAgent)) return '手机端'
   if (/iPad|Tablet/i.test(navigator.userAgent)) return '平板端'
   return '网页端'
+}
+
+function pickThemeColor(id: string) {
+  const total = [...id].reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  return themeColors[total % themeColors.length]
 }
 
 function readLocalVisitors() {
@@ -67,6 +82,7 @@ function apiRequest(path: string, payload?: unknown) {
 export function useOnlineVisitors() {
   const [visitorId] = useState(() => readVisitorId())
   const [visitorName, setVisitorName] = useState(() => readVisitorName())
+  const [visitorAvatar, setVisitorAvatar] = useState(() => readVisitorAvatar())
   const [visitors, setVisitors] = useState<OnlineVisitor[]>([])
   const [cloudEnabled, setCloudEnabled] = useState(false)
   const device = useMemo(() => detectDevice(), [])
@@ -76,9 +92,11 @@ export function useOnlineVisitors() {
       id: visitorId,
       name: visitorName,
       device,
+      themeColor: pickThemeColor(visitorId),
+      avatar: visitorAvatar,
       lastSeenAt: new Date().toISOString(),
     }),
-    [device, visitorId, visitorName],
+    [device, visitorAvatar, visitorId, visitorName],
   )
 
   const syncLocal = useCallback(() => {
@@ -88,7 +106,7 @@ export function useOnlineVisitors() {
   }, [currentVisitor])
 
   const sendHeartbeat = useCallback(async () => {
-    const payload = { id: visitorId, name: visitorName, device }
+    const payload = { id: visitorId, name: visitorName, device, themeColor: pickThemeColor(visitorId), avatar: visitorAvatar }
     try {
       const response = await apiRequest('/api/online/heartbeat', payload)
       const contentType = response.headers.get('content-type') || ''
@@ -98,7 +116,7 @@ export function useOnlineVisitors() {
       setCloudEnabled(false)
       syncLocal()
     }
-  }, [device, syncLocal, visitorId, visitorName])
+  }, [device, syncLocal, visitorAvatar, visitorId, visitorName])
 
   useEffect(() => {
     syncLocal()
@@ -160,11 +178,19 @@ export function useOnlineVisitors() {
     [],
   )
 
+  const updateVisitorAvatar = useCallback((avatar: string) => {
+    window.localStorage.setItem(visitorAvatarKey, avatar)
+    setVisitorAvatar(avatar)
+  }, [])
+
   return {
-    visitors: visitors.length > 0 ? visitors : [currentVisitor],
+    visitors,
+    currentVisitor,
     currentVisitorId: visitorId,
     visitorName,
+    visitorAvatar,
     cloudEnabled,
     updateVisitorName,
+    updateVisitorAvatar,
   }
 }

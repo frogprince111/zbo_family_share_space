@@ -9,10 +9,22 @@ type FamilyMembersProps = {
   memberPresence: MemberPresenceMap
   onAdd: () => void
   onEdit: (member: FamilyMember) => void
+  showAddButton?: boolean
+  editableMemberIds?: string[]
+  emptyMessage?: string
 }
 
-export function FamilyMembers({ members, memberPresence, onAdd, onEdit }: FamilyMembersProps) {
+export function FamilyMembers({
+  members,
+  memberPresence,
+  onAdd,
+  onEdit,
+  showAddButton = true,
+  editableMemberIds,
+  emptyMessage = '暂无家庭成员',
+}: FamilyMembersProps) {
   const navigate = useNavigate()
+  const editableIds = new Set(editableMemberIds)
 
   return (
     <section className="mt-16 rounded-[24px] border border-family-border bg-white p-6 shadow-soft sm:p-8 lg:p-10">
@@ -33,25 +45,38 @@ export function FamilyMembers({ members, memberPresence, onAdd, onEdit }: Family
       </div>
 
       <div className="flex gap-7 overflow-x-auto pb-2 sm:flex-wrap sm:justify-between md:gap-10">
+        {members.length === 0 && (
+          <div className="flex min-h-[170px] w-full items-center justify-center rounded-3xl bg-family-bg px-4 text-center text-base font-bold text-family-muted">
+            {emptyMessage}
+          </div>
+        )}
         {members.map((member) => (
           <div key={member.id} className="min-w-[116px] text-center sm:min-w-[140px]">
-            <MemberAvatar member={member} editable isOnline={memberPresence[member.id] ?? false} onEdit={() => onEdit(member)} />
+            <MemberAvatar
+              member={member}
+              editable={editableMemberIds ? editableIds.has(member.id) : true}
+              isOnline={memberPresence[member.id] ?? false}
+              showStatusDot={false}
+              onEdit={() => onEdit(member)}
+            />
             <p className="mt-5 text-xl font-bold text-family-text">{member.name}</p>
             <p className={`mt-2 text-sm font-semibold ${memberPresence[member.id] ? 'text-emerald-500' : 'text-slate-400'}`}>
               {memberPresence[member.id] ? '在线' : '离线'}
             </p>
           </div>
         ))}
-        <button
-          type="button"
-          className="min-w-[116px] cursor-pointer text-center text-family-muted hover:text-family-primary active:scale-95 sm:min-w-[140px]"
-          onClick={onAdd}
-        >
-          <span className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-white text-family-primary sm:h-36 sm:w-36">
-            <Plus size={54} />
-          </span>
-          <span className="mt-5 block text-lg font-semibold">添加成员</span>
-        </button>
+        {showAddButton && (
+          <button
+            type="button"
+            className="min-w-[116px] cursor-pointer text-center text-family-muted hover:text-family-primary active:scale-95 sm:min-w-[140px]"
+            onClick={onAdd}
+          >
+            <span className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border-2 border-dashed border-slate-300 bg-white text-family-primary sm:h-36 sm:w-36">
+              <Plus size={54} />
+            </span>
+            <span className="mt-5 block text-lg font-semibold">添加成员</span>
+          </button>
+        )}
       </div>
 
       <button
