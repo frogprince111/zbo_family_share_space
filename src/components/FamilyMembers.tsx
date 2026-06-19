@@ -39,19 +39,19 @@ export function FamilyMembers({
           onClick={() => navigate('/members')}
         >
           <UserRoundCog size={18} />
-          <span className="hidden sm:inline">管理成员</span>
+          <span className="hidden sm:inline">成员信息</span>
           <ChevronRight size={18} />
         </button>
       </div>
 
-      <div className="flex gap-7 overflow-x-auto pb-2 sm:flex-wrap sm:justify-between md:gap-10">
+      <div className="flex gap-6 overflow-x-auto pb-2 sm:flex-wrap sm:justify-start md:gap-8">
         {members.length === 0 && (
           <div className="flex min-h-[170px] w-full items-center justify-center rounded-3xl bg-family-bg px-4 text-center text-base font-bold text-family-muted">
             {emptyMessage}
           </div>
         )}
         {members.map((member) => (
-          <div key={member.id} className="min-w-[116px] text-center sm:min-w-[140px]">
+          <div key={member.id} className="min-w-[112px] text-center sm:min-w-[132px]">
             <MemberAvatar
               member={member}
               editable={editableMemberIds ? editableIds.has(member.id) : true}
@@ -59,7 +59,7 @@ export function FamilyMembers({
               showStatusDot={false}
               onEdit={() => onEdit(member)}
             />
-            <p className="mt-5 text-xl font-bold text-family-text">{member.name}</p>
+            <p className="mt-4 text-lg font-bold text-family-text sm:text-xl">{member.name}</p>
             <p className={`mt-2 text-sm font-semibold ${memberPresence[member.id] ? 'text-emerald-500' : 'text-slate-400'}`}>
               {memberPresence[member.id] ? '在线' : '离线'}
             </p>

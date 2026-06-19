@@ -4,7 +4,7 @@ import { NavLink } from 'react-router-dom'
 const navItems = [
   { label: '日程', path: '/schedule', icon: CalendarDays },
   { label: '待办', path: '/todo', icon: SquareCheckBig },
-  { label: '首页', path: '/home', icon: House, featured: true },
+  { label: '主页', path: '/home', icon: House, featured: true },
   { label: '相册', path: '/album', icon: Image },
   { label: '理财', path: '/finance', icon: WalletCards },
 ]

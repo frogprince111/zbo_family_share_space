@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { addNotification } from '../services/notifications'
 import { fileToBase64 } from '../utils/avatar'
 
 type AlbumFolder = {
@@ -169,6 +170,7 @@ export default function AlbumPage() {
     if (uploadedPhotos.length > 0) {
       setPhotos((current) => [...uploadedPhotos, ...current])
       setToast({ message: `已上传 ${uploadedPhotos.length} 张照片`, type: 'success' })
+      addNotification('相册', `上传了 ${uploadedPhotos.length} 张照片`)
     }
   }
 
@@ -195,12 +197,14 @@ export default function AlbumPage() {
     if (editingFolder) {
       setFolders((current) => current.map((folder) => (folder.id === editingFolder.id ? { ...folder, name, cover: coverPreview } : folder)))
       setToast({ message: '文件夹已保存', type: 'success' })
+      addNotification('相册', `相册文件夹已更新：${name}`)
     } else {
       setFolders((current) => [
         ...current,
         { id: crypto.randomUUID(), name, cover: coverPreview, createdAt: new Date().toISOString() },
       ])
       setToast({ message: '文件夹已添加', type: 'success' })
+      addNotification('相册', `新增相册文件夹：${name}`)
     }
     setFolderModalOpen(false)
   }
@@ -214,12 +218,14 @@ export default function AlbumPage() {
     setFolders((current) => current.filter((item) => item.id !== folder.id))
     setPhotos((current) => current.map((photo) => (photo.folderId === folder.id ? { ...photo, folderId: defaultFolders[0].id } : photo)))
     setToast({ message: '文件夹已删除', type: 'success' })
+    addNotification('相册', `删除相册文件夹：${folder.name}`)
   }
 
   const movePhotoToFolder = (photoId: string, folderId: string) => {
     const folder = folders.find((item) => item.id === folderId)
     setPhotos((current) => current.map((photo) => (photo.id === photoId ? { ...photo, folderId } : photo)))
     setToast({ message: `已放入${folder?.name ?? '文件夹'}`, type: 'success' })
+    addNotification('相册', `照片已移动到${folder?.name ?? '文件夹'}`)
   }
 
   const openContextMenu = (folder: AlbumFolder, x: number, y: number) => {
@@ -269,6 +275,7 @@ export default function AlbumPage() {
     setPhotos((current) => current.map((photo) => (photo.id === editingPhoto.id ? { ...photo, name } : photo)))
     setEditingPhoto(null)
     setToast({ message: '照片已重命名', type: 'success' })
+    addNotification('相册', `照片已重命名：${name}`)
   }
 
   const handleDeletePhoto = (photo: AlbumPhoto) => {
@@ -276,6 +283,7 @@ export default function AlbumPage() {
     setPhotos((current) => current.filter((item) => item.id !== photo.id))
     setContextPhoto(null)
     setToast({ message: '照片已删除', type: 'success' })
+    addNotification('相册', `删除照片：${photo.name}`)
   }
 
   const downloadPhoto = (photo: AlbumPhoto) => {

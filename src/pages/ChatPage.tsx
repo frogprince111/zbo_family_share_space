@@ -37,8 +37,9 @@ export default function ChatPage(_props: ChatPageProps) {
       onlineVisitors.visitors.map<FamilyMember>((visitor) => ({
         id: visitor.id,
         name: visitor.name,
-        role: visitor.device,
+        role: visitor.role || visitor.device,
         avatar: visitor.avatar,
+        birthday: visitor.birthday,
         themeColor: visitor.themeColor,
         createdAt: visitor.lastSeenAt,
       })),

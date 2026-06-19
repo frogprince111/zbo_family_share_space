@@ -94,6 +94,8 @@ function serializeVisitors() {
       device: visitor.device,
       themeColor: visitor.themeColor,
       avatar: visitor.avatar,
+      role: visitor.role,
+      birthday: visitor.birthday,
       lastSeenAt: new Date(visitor.lastSeenAt).toISOString(),
     }))
 }
@@ -137,6 +139,8 @@ function upsertVisitor(body, req) {
     device: cleanText(body.device, current?.device || fallbackDevice),
     themeColor: cleanThemeColor(body.themeColor, current?.themeColor),
     avatar: cleanLongText(body.avatar, current?.avatar || '', 1_500_000),
+    role: cleanText(body.role, current?.role || '家庭成员'),
+    birthday: cleanText(body.birthday, current?.birthday || ''),
     lastSeenAt: Date.now(),
   }
   visitors.set(id, visitor)

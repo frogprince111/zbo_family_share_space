@@ -2,6 +2,7 @@ import { Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { PageContainer } from '../components/PageContainer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { addNotification } from '../services/notifications'
 
 type TodoItem = {
   id: string
@@ -56,6 +57,7 @@ export default function TodoPage() {
 
     if (editingTodo) {
       setTodos((current) => current.map((todo) => (todo.id === editingTodo.id ? { ...todo, title } : todo)))
+      addNotification('待办', `待办已重命名：${title}`)
       closeModal()
       return
     }
@@ -69,11 +71,16 @@ export default function TodoPage() {
       },
       ...current,
     ])
+    addNotification('待办', `新增待办：${title}`)
     closeModal()
   }
 
   const toggleTodo = (id: string) => {
-    setTodos((current) => current.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)))
+    const target = todos.find((todo) => todo.id === id)
+    if (!target) return
+    const completed = !target.completed
+    setTodos((current) => current.map((todo) => (todo.id === id ? { ...todo, completed } : todo)))
+    addNotification('待办', `${target.title} 已标记为${completed ? '完成' : '未完成'}`)
   }
 
   const openContextMenu = (todo: TodoItem, x: number, y: number) => {
@@ -84,6 +91,7 @@ export default function TodoPage() {
   const deleteTodo = (todo: TodoItem) => {
     setTodos((current) => current.filter((item) => item.id !== todo.id))
     setContextTodo(null)
+    addNotification('待办', `已删除待办：${todo.title}`)
   }
 
   const startLongPress = (todo: TodoItem, x: number, y: number) => {

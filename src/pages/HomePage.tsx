@@ -14,6 +14,8 @@ import type { ActivityEvent } from '../hooks/useFamilyActivities'
 import { useFamilyActivities } from '../hooks/useFamilyActivities'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
 import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
+import { locateReadableAddress } from '../services/location'
+import { addNotification } from '../services/notifications'
 import type { FamilyMember, FamilyProfile } from '../types/member'
 
 type HomePageProps = {
@@ -21,9 +23,10 @@ type HomePageProps = {
   setMembers: Dispatch<SetStateAction<FamilyMember[]>>
   memberPresence: MemberPresenceMap
   familyProfile: FamilyProfile
+  setFamilyProfile: Dispatch<SetStateAction<FamilyProfile>>
 }
 
-export default function HomePage({ members, setMembers, familyProfile }: HomePageProps) {
+export default function HomePage({ members, setMembers, familyProfile, setFamilyProfile }: HomePageProps) {
   const [toast, setToast] = useState<ToastState>(null)
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -31,6 +34,7 @@ export default function HomePage({ members, setMembers, familyProfile }: HomePag
   const [choreDiceOpen, setChoreDiceOpen] = useState(false)
   const [onlineNameOpen, setOnlineNameOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
+  const [locatingAddress, setLocatingAddress] = useState(false)
   const onlineVisitors = useOnlineVisitors()
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -48,9 +52,10 @@ export default function HomePage({ members, setMembers, familyProfile }: HomePag
   const onlineMembers = onlineVisitors.visitors.map<FamilyMember>((visitor) => ({
     id: visitor.id,
     name: visitor.name,
-    role: visitor.device,
+    role: visitor.role || visitor.device,
     themeColor: visitor.themeColor,
     avatar: visitor.avatar,
+    birthday: visitor.birthday,
     createdAt: visitor.lastSeenAt,
   }))
   const onlinePresence = onlineMembers.reduce<MemberPresenceMap>((next, member) => {
@@ -77,9 +82,29 @@ export default function HomePage({ members, setMembers, familyProfile }: HomePag
     showToast('家庭成员已删除')
   }
 
+  const handleLocateAddress = async () => {
+    setLocatingAddress(true)
+    try {
+      const located = await locateReadableAddress()
+      setFamilyProfile((current) => ({ ...current, address: located.address }))
+      showToast('家庭住址已更新')
+      addNotification('主页', `家庭住址已更新为：${located.address}`)
+    } catch (error) {
+      const message = error instanceof GeolocationPositionError && error.code === error.PERMISSION_DENIED ? '定位权限被拒绝' : '定位失败，请稍后重试'
+      showToast(message, 'error')
+    } finally {
+      setLocatingAddress(false)
+    }
+  }
+
   return (
     <PageContainer>
-      <Header spaceName={familyProfile.spaceName} address={familyProfile.address} onNotify={() => showToast('暂无新通知')} />
+      <Header
+        spaceName={familyProfile.spaceName}
+        address={familyProfile.address}
+        onLocateAddress={handleLocateAddress}
+        locatingAddress={locatingAddress}
+      />
       <HarmonyTips onOpenChoreDice={() => setChoreDiceOpen(true)} onOpenActivity={() => setActivityOpen(true)} />
       <FamilyMembers
         members={onlineMembers}
@@ -99,13 +124,18 @@ export default function HomePage({ members, setMembers, familyProfile }: HomePag
         open={onlineNameOpen}
         name={onlineVisitors.visitorName}
         avatar={onlineVisitors.visitorAvatar}
+        role={onlineVisitors.visitorRole}
+        birthday={onlineVisitors.visitorBirthday}
         onClose={() => setOnlineNameOpen(false)}
         onError={(message) => showToast(message, 'error')}
         onSave={(profile) => {
           onlineVisitors.updateVisitorName(profile.name)
           onlineVisitors.updateVisitorAvatar(profile.avatar ?? '')
+          onlineVisitors.updateVisitorRole(profile.role)
+          onlineVisitors.updateVisitorBirthday(profile.birthday)
           setOnlineNameOpen(false)
           showToast('在线资料已同步')
+          addNotification('主页', `${profile.name} 更新了成员资料`)
         }}
       />
       <FamilyActivityModal
@@ -121,10 +151,12 @@ export default function HomePage({ members, setMembers, familyProfile }: HomePag
             creatorName: onlineVisitors.visitorName,
           })
           showToast('活动已创建，已通知在线成员')
+          addNotification('主页', `${onlineVisitors.visitorName} 创建了家庭活动：${activity.title}`)
         }}
         onJoin={(id) => {
           familyActivities.joinActivity(id, onlineVisitors.currentVisitorId, onlineVisitors.visitorName)
           showToast('接龙成功')
+          addNotification('主页', `${onlineVisitors.visitorName} 参加了家庭活动接龙`)
         }}
       />
       <MemberFormModal

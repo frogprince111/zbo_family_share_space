@@ -23,8 +23,8 @@ export function MemberAvatar({
   onEdit,
 }: MemberAvatarProps) {
   const colors = themeColorMap[member.themeColor]
-  const shellSize = size === 'lg' ? 'h-[124px] w-[124px] sm:h-[156px] sm:w-[156px]' : 'h-[66px] w-[66px]'
-  const avatarSize = size === 'lg' ? 'h-28 w-28 sm:h-36 sm:w-36' : 'h-14 w-14'
+  const shellSize = size === 'lg' ? 'h-[112px] w-[112px] sm:h-[136px] sm:w-[136px]' : 'h-[66px] w-[66px]'
+  const avatarSize = size === 'lg' ? 'h-24 w-24 sm:h-32 sm:w-32' : 'h-14 w-14'
   const statusDotSize = size === 'lg' ? 'h-5 w-5 sm:h-6 sm:w-6' : 'h-4 w-4'
   const editButtonSize = size === 'lg' ? 'h-9 w-9' : 'h-8 w-8'
   const avatarStyle = {

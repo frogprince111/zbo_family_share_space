@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
+import { locateReadableAddress } from '../services/location'
+import { addNotification } from '../services/notifications'
 import type { FamilyMember, FamilyProfile } from '../types/member'
 
 type SettingsPageProps = {
@@ -23,32 +25,24 @@ export default function SettingsPage({ members, familyProfile, setFamilyProfile 
   const handleSave = () => {
     setFamilyProfile({ spaceName: spaceName.trim() || '家庭共享空间', address: address.trim(), currentMemberId })
     setToast({ message: '设置已保存', type: 'success' })
+    addNotification('主页', '主页设置已更新')
     navigate('/home')
   }
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setToast({ message: '当前设备不支持定位', type: 'error' })
-      return
-    }
-
+  const handleUseCurrentLocation = async () => {
     setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const latitude = position.coords.latitude.toFixed(6)
-        const longitude = position.coords.longitude.toFixed(6)
-        const accuracy = Math.round(position.coords.accuracy)
-        setAddress(`当前位置：纬度 ${latitude}，经度 ${longitude}（精度约 ${accuracy} 米）`)
-        setLocating(false)
-        setToast({ message: '已获取真实定位', type: 'success' })
-      },
-      (error) => {
-        const message = error.code === error.PERMISSION_DENIED ? '定位权限被拒绝' : '定位失败，请稍后重试'
-        setLocating(false)
-        setToast({ message, type: 'error' })
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    )
+    try {
+      const located = await locateReadableAddress()
+      setAddress(located.address)
+      setFamilyProfile((current) => ({ ...current, address: located.address }))
+      setToast({ message: '家庭住址已更新', type: 'success' })
+      addNotification('主页', `家庭住址已更新为：${located.address}`)
+    } catch (error) {
+      const message = error instanceof GeolocationPositionError && error.code === error.PERMISSION_DENIED ? '定位权限被拒绝' : '定位失败，请稍后重试'
+      setToast({ message, type: 'error' })
+    } finally {
+      setLocating(false)
+    }
   }
 
   return (
@@ -94,7 +88,7 @@ export default function SettingsPage({ members, familyProfile, setFamilyProfile 
               </button>
             </div>
             <span className="text-xs font-normal leading-5 text-family-muted">
-              浏览器会请求定位权限；当前版本保存真实经纬度，接入地图服务后可转换为详细门牌地址。
+              浏览器会请求定位权限；定位后会保存地址名称，不在页面显示经纬度。
             </span>
           </label>
           <label className="grid gap-2 rounded-2xl bg-slate-50 px-4 py-4 text-sm font-semibold text-family-text">

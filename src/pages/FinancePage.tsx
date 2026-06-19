@@ -2,6 +2,7 @@ import { ChevronDown, Minus, Plus, RotateCcw, WalletCards, X } from 'lucide-reac
 import { useEffect, useMemo, useState } from 'react'
 import { PageContainer } from '../components/PageContainer'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { addNotification } from '../services/notifications'
 
 type BillType = 'expense' | 'income'
 
@@ -81,6 +82,7 @@ export default function FinancePage() {
       },
       ...current,
     ])
+    addNotification('理财', `新增${billTypeText[modalType]}：${trimmedTitle} ${formatCurrency(numericAmount)}`)
     closeBillModal()
   }
 
@@ -120,6 +122,7 @@ export default function FinancePage() {
       ...current.filter((bill) => getMonthKey(new Date(bill.createdAt)) !== resetMonth),
     ])
     setResetOpen(false)
+    addNotification('理财', `${getMonthLabel(resetMonth)}收支已重置`)
     if (expandedMonth === resetMonth) setExpandedMonth(null)
   }
 

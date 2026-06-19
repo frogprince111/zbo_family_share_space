@@ -7,21 +7,27 @@ type EditOnlineNameModalProps = {
   open: boolean
   name: string
   avatar?: string
+  role?: string
+  birthday?: string
   onClose: () => void
-  onSave: (profile: { name: string; avatar?: string }) => void
+  onSave: (profile: { name: string; avatar?: string; role: string; birthday: string }) => void
   onError: (message: string) => void
 }
 
-export function EditOnlineNameModal({ open, name, avatar, onClose, onSave, onError }: EditOnlineNameModalProps) {
+export function EditOnlineNameModal({ open, name, avatar, role = '家庭成员', birthday = '', onClose, onSave, onError }: EditOnlineNameModalProps) {
   const [draftName, setDraftName] = useState(name)
   const [draftAvatar, setDraftAvatar] = useState(avatar ?? '')
+  const [draftRole, setDraftRole] = useState(role)
+  const [draftBirthday, setDraftBirthday] = useState(birthday)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
     setDraftName(name)
     setDraftAvatar(avatar ?? '')
-  }, [avatar, name, open])
+    setDraftRole(role)
+    setDraftBirthday(birthday)
+  }, [avatar, birthday, name, open, role])
 
   if (!open) return null
 
@@ -31,7 +37,7 @@ export function EditOnlineNameModal({ open, name, avatar, onClose, onSave, onErr
       onError('请输入在线名称')
       return
     }
-    onSave({ name: nextName, avatar: draftAvatar })
+    onSave({ name: nextName, avatar: draftAvatar, role: draftRole.trim() || '家庭成员', birthday: draftBirthday })
   }
 
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -51,9 +57,12 @@ export function EditOnlineNameModal({ open, name, avatar, onClose, onSave, onErr
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/25 px-4 pb-4 sm:items-center sm:pb-0" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-[calc(24px+env(safe-area-inset-top))]"
+      onMouseDown={onClose}
+    >
       <section
-        className="w-full max-w-md rounded-[24px] bg-white p-6 shadow-soft"
+        className="my-auto max-h-[calc(100dvh-48px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-md overflow-y-auto rounded-[24px] bg-white p-6 shadow-soft"
         role="dialog"
         aria-modal="true"
         aria-labelledby="online-name-title"
@@ -61,7 +70,7 @@ export function EditOnlineNameModal({ open, name, avatar, onClose, onSave, onErr
       >
         <div className="flex items-center justify-between">
           <h2 id="online-name-title" className="text-xl font-black text-family-text">
-            编辑在线名称
+            编辑成员资料
           </h2>
           <button
             type="button"
@@ -96,6 +105,28 @@ export function EditOnlineNameModal({ open, name, avatar, onClose, onSave, onErr
             autoFocus
           />
         </label>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-2 text-sm font-bold text-family-text">
+            成员角色
+            <input
+              value={draftRole}
+              maxLength={16}
+              placeholder="例如：爸爸、妈妈、宝贝"
+              className="min-h-12 rounded-2xl border border-family-border px-4 text-base font-bold text-family-text placeholder:text-slate-400 focus:border-family-primary"
+              onChange={(event) => setDraftRole(event.target.value)}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-bold text-family-text">
+            生日
+            <input
+              type="date"
+              value={draftBirthday}
+              className="min-h-12 rounded-2xl border border-family-border px-4 text-base font-bold text-family-text focus:border-family-primary"
+              onChange={(event) => setDraftBirthday(event.target.value)}
+            />
+          </label>
+        </div>
 
         <button
           type="button"

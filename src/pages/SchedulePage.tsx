@@ -3,7 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
 import { defaultMembers } from '../data/defaultMembers'
+import { addNotification } from '../services/notifications'
 import type { FamilyMember } from '../types/member'
 
 type ScheduleEvent = {
@@ -72,6 +74,7 @@ export default function SchedulePage() {
   const todayKey = toDateKey(today)
   const [events, setEvents] = useLocalStorage<ScheduleEvent[]>('family-schedule-events', [])
   const [members] = useLocalStorage<FamilyMember[]>('family-members', defaultMembers)
+  const onlineVisitors = useOnlineVisitors()
   const [countdownTitle, setCountdownTitle] = useLocalStorage('family-countdown-title', '')
   const [countdownDate, setCountdownDate] = useLocalStorage('family-countdown-date', '')
   const [toast, setToast] = useState<ToastState>(null)
@@ -120,17 +123,27 @@ export default function SchedulePage() {
     return [...emptyCells, ...dayCells]
   }, [currentMonth, currentYear, daysInMonth, leadingDays])
 
-  const eventsByDate = useMemo(() => {
-    return events.reduce<Record<string, ScheduleEvent[]>>((grouped, event) => {
-      grouped[event.date] = [...(grouped[event.date] ?? []), event]
-      return grouped
-    }, {})
-  }, [events])
-
-  const selectedDateEvents = [...(eventsByDate[selectedDate] ?? [])].sort((a, b) => a.time.localeCompare(b.time))
-
   const birthdayEvents = useMemo(() => {
-    return members
+    const start = parseDateKey(todayKey).getTime()
+    const end = start + 7 * 24 * 60 * 60 * 1000
+
+    const onlineBirthdayMembers = onlineVisitors.visitors
+      .filter((visitor) => visitor.birthday)
+      .map<FamilyMember>((visitor) => ({
+        id: visitor.id,
+        name: visitor.name,
+        role: visitor.role || visitor.device,
+        birthday: visitor.birthday,
+        avatar: visitor.avatar,
+        themeColor: visitor.themeColor,
+        createdAt: visitor.lastSeenAt,
+      }))
+
+    const birthdayMembers = [...members, ...onlineBirthdayMembers].filter(
+      (member, index, all) => all.findIndex((item) => item.id === member.id) === index,
+    )
+
+    return birthdayMembers
       .filter((member) => member.birthday)
       .flatMap((member) => {
         const [, birthMonth, birthDay] = member.birthday!.split('-').map(Number)
@@ -148,7 +161,27 @@ export default function SchedulePage() {
           }
         })
       })
-  }, [currentYear, members])
+      .filter((event) => {
+        const time = parseDateKey(event.date).getTime()
+        return time >= start && time <= end
+      })
+  }, [currentYear, members, onlineVisitors.visitors, todayKey])
+
+  const eventsByDate = useMemo(() => {
+    return events.reduce<Record<string, ScheduleEvent[]>>((grouped, event) => {
+      grouped[event.date] = [...(grouped[event.date] ?? []), event]
+      return grouped
+    }, {})
+  }, [events])
+
+  const calendarEventsByDate = useMemo(() => {
+    return [...events, ...birthdayEvents].reduce<Record<string, ScheduleEvent[]>>((grouped, event) => {
+      grouped[event.date] = [...(grouped[event.date] ?? []), event]
+      return grouped
+    }, {})
+  }, [birthdayEvents, events])
+
+  const selectedDateEvents = [...(eventsByDate[selectedDate] ?? [])].sort((a, b) => a.time.localeCompare(b.time))
 
   const recentEvents = useMemo(() => {
     const now = new Date()
@@ -250,6 +283,7 @@ export default function SchedulePage() {
       return extraEvent ? [...next, extraEvent] : next
     })
     setToast({ message: '日程已保存', type: 'success' })
+    addNotification('日程', `${formatDateLabel(selectedDate)} 已保存日程：${title}`)
     setEditingEvent(createEmptyEvent(selectedDate))
     setModalOpen(false)
   }
@@ -259,10 +293,12 @@ export default function SchedulePage() {
     setEditingEvent(createEmptyEvent(selectedDate))
     setContextEvent(null)
     setToast({ message: '日程已删除', type: 'success' })
+    addNotification('日程', '已删除一条日程')
   }
 
   const toggleEventCompleted = (eventId: string) => {
     setEvents((current) => current.map((event) => (event.id === eventId ? { ...event, completed: !event.completed } : event)))
+    addNotification('日程', '日程完成状态已更新')
   }
 
   const openEventContextMenu = (event: ScheduleEvent, x: number, y: number) => {
@@ -302,6 +338,7 @@ export default function SchedulePage() {
     setCountdownDate(draftCountdownDate)
     setCountdownModalOpen(false)
     setToast({ message: '倒计时已保存', type: 'success' })
+    addNotification('日程', `倒计时已设置：${title}`)
   }
 
   return (
@@ -338,7 +375,7 @@ export default function SchedulePage() {
             </div>
           ))}
           {calendarCells.map((cell) => {
-            const hasEvents = Boolean(cell.dateKey && eventsByDate[cell.dateKey]?.length)
+            const hasEvents = Boolean(cell.dateKey && calendarEventsByDate[cell.dateKey]?.length)
             const hasActiveTasks = hasEvents && cell.dateKey >= todayKey
             const isToday = cell.dateKey === todayKey
             if (!cell.dateKey) return <div key={cell.key} className="min-h-16 rounded-2xl" />
@@ -364,7 +401,7 @@ export default function SchedulePage() {
                     ) : (
                       <span className="h-2.5 w-2.5 rounded-full bg-rose-500 shadow-sm" />
                     )}
-                    <span className="text-[11px] font-semibold text-blue-600">{eventsByDate[cell.dateKey].length} 项</span>
+                    <span className="text-[11px] font-semibold text-blue-600">{calendarEventsByDate[cell.dateKey].length} 项</span>
                   </span>
                 )}
               </button>

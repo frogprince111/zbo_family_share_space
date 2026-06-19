@@ -1,13 +1,15 @@
-import { Bell, Heart, HousePlus, MapPin, Settings } from 'lucide-react'
+import { Heart, HousePlus, MapPin, Settings } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { NotificationBell } from './NotificationBell'
 
 type HeaderProps = {
   spaceName: string
   address: string
-  onNotify: () => void
+  onLocateAddress?: () => void
+  locatingAddress?: boolean
 }
 
-export function Header({ spaceName, address, onNotify }: HeaderProps) {
+export function Header({ spaceName, address, onLocateAddress, locatingAddress = false }: HeaderProps) {
   const navigate = useNavigate()
 
   return (
@@ -20,21 +22,20 @@ export function Header({ spaceName, address, onNotify }: HeaderProps) {
         <div>
           <h1 className="text-3xl font-black tracking-normal text-family-text sm:text-5xl">{spaceName || '家庭共享空间'}</h1>
           <p className="mt-3 text-base text-family-muted sm:text-xl">一起管理家庭生活，让爱更有序</p>
-          <p className="mt-3 flex max-w-xl items-center gap-2 text-sm font-medium text-family-muted sm:text-base">
+          <button
+            type="button"
+            className="mt-3 flex max-w-xl cursor-pointer items-center gap-2 rounded-full text-left text-sm font-medium text-family-muted transition hover:text-family-primary active:scale-[0.99] sm:text-base"
+            onClick={onLocateAddress}
+            disabled={!onLocateAddress || locatingAddress}
+            title="点击重新定位家庭住址"
+          >
             <MapPin size={18} className="shrink-0 text-family-primary" />
-            <span className="truncate">家庭住址：{address || '未设置'}</span>
-          </p>
+            <span className="truncate">家庭住址：{locatingAddress ? '定位中...' : address || '未设置'}</span>
+          </button>
         </div>
       </div>
       <div className="flex shrink-0 gap-3 pt-2 sm:gap-5">
-        <button
-          type="button"
-          aria-label="查看通知"
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-slate-600 hover:bg-white hover:text-family-primary active:scale-95"
-          onClick={onNotify}
-        >
-          <Bell size={28} />
-        </button>
+        <NotificationBell />
         <button
           type="button"
           aria-label="打开设置"

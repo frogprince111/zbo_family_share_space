@@ -8,12 +8,16 @@ export type OnlineVisitor = {
   device: string
   themeColor: ThemeColor
   avatar?: string
+  role?: string
+  birthday?: string
   lastSeenAt: string
 }
 
 const visitorIdKey = 'family-online-visitor-id'
 const visitorNameKey = 'family-online-visitor-name'
 const visitorAvatarKey = 'family-online-visitor-avatar'
+const visitorRoleKey = 'family-online-visitor-role'
+const visitorBirthdayKey = 'family-online-visitor-birthday'
 const localVisitorsKey = 'family-online-local-visitors'
 const themeColors: ThemeColor[] = ['pink', 'purple', 'blue', 'yellow', 'green', 'orange']
 
@@ -42,6 +46,14 @@ function readVisitorName() {
 
 function readVisitorAvatar() {
   return window.localStorage.getItem(visitorAvatarKey) || ''
+}
+
+function readVisitorRole() {
+  return window.localStorage.getItem(visitorRoleKey) || '家庭成员'
+}
+
+function readVisitorBirthday() {
+  return window.localStorage.getItem(visitorBirthdayKey) || ''
 }
 
 function detectDevice() {
@@ -83,6 +95,8 @@ export function useOnlineVisitors() {
   const [visitorId] = useState(() => readVisitorId())
   const [visitorName, setVisitorName] = useState(() => readVisitorName())
   const [visitorAvatar, setVisitorAvatar] = useState(() => readVisitorAvatar())
+  const [visitorRole, setVisitorRole] = useState(() => readVisitorRole())
+  const [visitorBirthday, setVisitorBirthday] = useState(() => readVisitorBirthday())
   const [visitors, setVisitors] = useState<OnlineVisitor[]>([])
   const [cloudEnabled, setCloudEnabled] = useState(false)
   const device = useMemo(() => detectDevice(), [])
@@ -94,9 +108,11 @@ export function useOnlineVisitors() {
       device,
       themeColor: pickThemeColor(visitorId),
       avatar: visitorAvatar,
+      role: visitorRole,
+      birthday: visitorBirthday,
       lastSeenAt: new Date().toISOString(),
     }),
-    [device, visitorAvatar, visitorId, visitorName],
+    [device, visitorAvatar, visitorBirthday, visitorId, visitorName, visitorRole],
   )
 
   const syncLocal = useCallback(() => {
@@ -106,7 +122,15 @@ export function useOnlineVisitors() {
   }, [currentVisitor])
 
   const sendHeartbeat = useCallback(async () => {
-    const payload = { id: visitorId, name: visitorName, device, themeColor: pickThemeColor(visitorId), avatar: visitorAvatar }
+    const payload = {
+      id: visitorId,
+      name: visitorName,
+      device,
+      themeColor: pickThemeColor(visitorId),
+      avatar: visitorAvatar,
+      role: visitorRole,
+      birthday: visitorBirthday,
+    }
     try {
       const response = await apiRequest('/api/online/heartbeat', payload)
       const contentType = response.headers.get('content-type') || ''
@@ -116,7 +140,7 @@ export function useOnlineVisitors() {
       setCloudEnabled(false)
       syncLocal()
     }
-  }, [device, syncLocal, visitorAvatar, visitorId, visitorName])
+  }, [device, syncLocal, visitorAvatar, visitorBirthday, visitorId, visitorName, visitorRole])
 
   useEffect(() => {
     syncLocal()
@@ -183,14 +207,29 @@ export function useOnlineVisitors() {
     setVisitorAvatar(avatar)
   }, [])
 
+  const updateVisitorRole = useCallback((role: string) => {
+    const nextRole = role.trim().slice(0, 16) || '家庭成员'
+    window.localStorage.setItem(visitorRoleKey, nextRole)
+    setVisitorRole(nextRole)
+  }, [])
+
+  const updateVisitorBirthday = useCallback((birthday: string) => {
+    window.localStorage.setItem(visitorBirthdayKey, birthday)
+    setVisitorBirthday(birthday)
+  }, [])
+
   return {
     visitors,
     currentVisitor,
     currentVisitorId: visitorId,
     visitorName,
     visitorAvatar,
+    visitorRole,
+    visitorBirthday,
     cloudEnabled,
     updateVisitorName,
     updateVisitorAvatar,
+    updateVisitorRole,
+    updateVisitorBirthday,
   }
 }

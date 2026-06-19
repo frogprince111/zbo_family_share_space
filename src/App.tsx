@@ -39,13 +39,21 @@ export default function App() {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route
           path="/home"
-          element={<HomePage members={members} setMembers={setMembers} memberPresence={memberPresence} familyProfile={normalizedFamilyProfile} />}
+          element={
+            <HomePage
+              members={members}
+              setMembers={setMembers}
+              memberPresence={memberPresence}
+              familyProfile={normalizedFamilyProfile}
+              setFamilyProfile={setFamilyProfile}
+            />
+          }
         />
         <Route
           path="/chat"
           element={<ChatPage members={members} memberPresence={memberPresence} familyProfile={normalizedFamilyProfile} />}
         />
-        <Route path="/members" element={<MembersPage members={members} setMembers={setMembers} memberPresence={memberPresence} />} />
+        <Route path="/members" element={<MembersPage />} />
         <Route path="/schedule" element={<SchedulePage />} />
         <Route path="/todo" element={<TodoPage />} />
         <Route path="/album" element={<AlbumPage />} />
