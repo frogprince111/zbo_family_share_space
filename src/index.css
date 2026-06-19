@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #f8f9fc;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: #1f2430;
+  background: #f8f9fc;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(116, 103, 240, 0.28);
+  outline-offset: 3px;
+}
+
+#root {
+  min-height: 100vh;
+  background: #f8f9fc;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-page-bottom {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+
+.party-popper-left {
+  animation: party-pop-left 3s ease-out both;
+}
+
+.party-popper-right {
+  animation: party-pop-right 3s ease-out both;
+}
+
+.confetti-burst {
+  position: absolute;
+  bottom: 78px;
+  width: 1px;
+  height: 1px;
+}
+
+.confetti-left {
+  left: 40px;
+}
+
+.confetti-right {
+  right: 40px;
+}
+
+.confetti-burst span {
+  --piece-index: 0;
+  --piece-lift: 0;
+  position: absolute;
+  width: 7px;
+  height: 12px;
+  border-radius: 3px;
+  background: hsl(calc(var(--piece-index) * 28), 82%, 66%);
+  transform: rotate(calc(var(--piece-index) * 24deg));
+  animation: confetti-fly 3s cubic-bezier(0.15, 0.7, 0.25, 1) both;
+  animation-delay: calc(var(--piece-index) * 24ms);
+}
+
+.confetti-left span {
+  --direction: 1;
+}
+
+.confetti-right span {
+  --direction: -1;
+}
+
+@keyframes party-pop-left {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) rotate(-26deg) scale(0.75);
+  }
+  20%,
+  80% {
+    opacity: 1;
+    transform: translateY(0) rotate(-18deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(6px) rotate(-18deg) scale(0.9);
+  }
+}
+
+@keyframes party-pop-right {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scaleX(-1) rotate(-26deg) scale(0.75);
+  }
+  20%,
+  80% {
+    opacity: 1;
+    transform: translateY(0) scaleX(-1) rotate(-18deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(6px) scaleX(-1) rotate(-18deg) scale(0.9);
+  }
+}
+
+@keyframes confetti-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg) scale(0.8);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(
+        calc(var(--direction) * (42px + var(--piece-index) * 7px)),
+        calc(-42px - var(--piece-lift) * 18px)
+      )
+      rotate(calc(180deg + var(--piece-index) * 32deg)) scale(1);
+  }
+}
