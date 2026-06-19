@@ -1,4 +1,4 @@
-import { Heart, HousePlus, MapPin, Settings } from 'lucide-react'
+import { Heart, HousePlus, MapPin, Settings, Volume2, VolumeX } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { NotificationBell } from './NotificationBell'
 
@@ -7,9 +7,11 @@ type HeaderProps = {
   address: string
   onLocateAddress?: () => void
   locatingAddress?: boolean
+  soundEnabled?: boolean
+  onToggleSound?: () => void
 }
 
-export function Header({ spaceName, address, onLocateAddress, locatingAddress = false }: HeaderProps) {
+export function Header({ spaceName, address, onLocateAddress, locatingAddress = false, soundEnabled = true, onToggleSound }: HeaderProps) {
   const navigate = useNavigate()
 
   return (
@@ -36,6 +38,17 @@ export function Header({ spaceName, address, onLocateAddress, locatingAddress = 
       </div>
       <div className="flex shrink-0 gap-3 pt-2 sm:gap-5">
         <NotificationBell />
+        <button
+          type="button"
+          aria-label={soundEnabled ? '关闭提示音' : '开启提示音'}
+          title={soundEnabled ? '关闭提示音' : '开启提示音'}
+          className={`flex h-11 w-11 cursor-pointer items-center justify-center rounded-full active:scale-95 ${
+            soundEnabled ? 'text-slate-600 hover:bg-white hover:text-family-primary' : 'bg-slate-100 text-slate-400 hover:text-family-primary'
+          }`}
+          onClick={onToggleSound}
+        >
+          {soundEnabled ? <Volume2 size={27} /> : <VolumeX size={27} />}
+        </button>
         <button
           type="button"
           aria-label="打开设置"

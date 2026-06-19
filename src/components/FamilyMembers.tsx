@@ -12,6 +12,7 @@ type FamilyMembersProps = {
   showAddButton?: boolean
   editableMemberIds?: string[]
   emptyMessage?: string
+  chatUnreadCount?: number
 }
 
 export function FamilyMembers({
@@ -22,6 +23,7 @@ export function FamilyMembers({
   showAddButton = true,
   editableMemberIds,
   emptyMessage = '暂无家庭成员',
+  chatUnreadCount = 0,
 }: FamilyMembersProps) {
   const navigate = useNavigate()
   const editableIds = new Set(editableMemberIds)
@@ -81,9 +83,12 @@ export function FamilyMembers({
 
       <button
         type="button"
-        className="mt-8 flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-family-primary text-base font-black text-white shadow-sm hover:bg-violet-600 active:scale-95"
+        className="relative mt-8 flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-family-primary text-base font-black text-white shadow-sm hover:bg-violet-600 active:scale-95"
         onClick={() => navigate('/chat')}
       >
+        {chatUnreadCount > 0 && (
+          <span className="absolute right-5 top-3 h-3 w-3 rounded-full bg-rose-500 ring-2 ring-white" aria-label={`${chatUnreadCount}条未读群聊消息`} />
+        )}
         <MessageCircleMore size={22} />
         开始群聊
       </button>

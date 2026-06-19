@@ -87,7 +87,7 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
               家务小决定
             </p>
             <h2 id="chore-dice-title" className="mt-2 text-2xl font-black text-family-text">
-              谁今天来打扫家务？
+              挑选一位英雄
             </h2>
           </div>
           <button
@@ -129,7 +129,7 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
             <Star size={44} fill="currentColor" />
           </div>
           <p className="mt-4 text-sm text-family-muted">
-            {rolling ? '正在抽取今天的幸运星...' : '点击按钮，随机选出今天的打扫负责人'}
+            {rolling ? '正在抽取今天的幸运星...' : '点击按钮，从在线成员里挑选今天的英雄'}
           </p>
         </div>
 
@@ -148,7 +148,7 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
         <div className="mt-6 min-h-[88px] rounded-[20px] border border-family-border bg-slate-50 p-4 text-center">
           {selectedMember ? (
             <>
-              <p className="text-sm text-family-muted">{rolling ? '幸运星正在闪烁...' : '今天的打扫负责人是'}</p>
+              <p className="text-sm text-family-muted">{rolling ? '幸运星正在闪烁...' : '今天的英雄是'}</p>
               <p className="mt-2 text-2xl font-black text-family-text">{selectedMember.name}</p>
             </>
           ) : (

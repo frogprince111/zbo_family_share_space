@@ -7,6 +7,7 @@ import { PageContainer } from '../components/PageContainer'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
 import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
 import { useRealtimeChat } from '../hooks/useRealtimeChat'
+import { markChatReadNow } from '../services/chatRead'
 import type { FamilyMember, FamilyProfile } from '../types/member'
 import { fileToBase64 } from '../utils/avatar'
 
@@ -75,6 +76,10 @@ export default function ChatPage(_props: ChatPageProps) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
   }, [realtimeChat.messages])
+
+  useEffect(() => {
+    markChatReadNow()
+  }, [realtimeChat.messages.length])
 
   const sendMessage = () => {
     const text = draft.trim()

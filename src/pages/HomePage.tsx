@@ -12,8 +12,11 @@ import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
 import type { ActivityEvent } from '../hooks/useFamilyActivities'
 import { useFamilyActivities } from '../hooks/useFamilyActivities'
+import { useChatUnread } from '../hooks/useChatUnread'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
 import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
+import { useRealtimeChat } from '../hooks/useRealtimeChat'
+import { useSoundSetting } from '../hooks/useSoundSetting'
 import { locateReadableAddress } from '../services/location'
 import { addNotification } from '../services/notifications'
 import type { FamilyMember, FamilyProfile } from '../types/member'
@@ -26,7 +29,7 @@ type HomePageProps = {
   setFamilyProfile: Dispatch<SetStateAction<FamilyProfile>>
 }
 
-export default function HomePage({ members, setMembers, familyProfile, setFamilyProfile }: HomePageProps) {
+export default function HomePage({ setMembers, familyProfile, setFamilyProfile }: HomePageProps) {
   const [toast, setToast] = useState<ToastState>(null)
   const [editingMember, setEditingMember] = useState<FamilyMember | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -36,9 +39,19 @@ export default function HomePage({ members, setMembers, familyProfile, setFamily
   const [activityOpen, setActivityOpen] = useState(false)
   const [locatingAddress, setLocatingAddress] = useState(false)
   const onlineVisitors = useOnlineVisitors()
+  const realtimeChat = useRealtimeChat()
+  const soundSetting = useSoundSetting()
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
   }, [])
+  const chatUnread = useChatUnread({
+    messages: realtimeChat.messages,
+    currentMemberId: onlineVisitors.currentVisitorId,
+    soundEnabled: soundSetting.enabled,
+    onIncomingMessage: (message) => {
+      addNotification('主页', message.type === 'text' ? `群聊收到新消息：${message.text ?? ''}` : '群聊收到一条新消息')
+    },
+  })
 
   const handleActivityEvent = useCallback(
     (event: ActivityEvent) => {
@@ -104,6 +117,8 @@ export default function HomePage({ members, setMembers, familyProfile, setFamily
         address={familyProfile.address}
         onLocateAddress={handleLocateAddress}
         locatingAddress={locatingAddress}
+        soundEnabled={soundSetting.enabled}
+        onToggleSound={soundSetting.toggle}
       />
       <HarmonyTips onOpenChoreDice={() => setChoreDiceOpen(true)} onOpenActivity={() => setActivityOpen(true)} />
       <FamilyMembers
@@ -119,6 +134,7 @@ export default function HomePage({ members, setMembers, familyProfile, setFamily
         onEdit={(member) => {
           if (member.id === onlineVisitors.currentVisitorId) setOnlineNameOpen(true)
         }}
+        chatUnreadCount={chatUnread.unreadCount}
       />
       <EditOnlineNameModal
         open={onlineNameOpen}
@@ -175,9 +191,9 @@ export default function HomePage({ members, setMembers, familyProfile, setFamily
       />
       <ChoreDiceModal
         open={choreDiceOpen}
-        members={members}
+        members={onlineMembers}
         onClose={() => setChoreDiceOpen(false)}
-        onEmptyMembers={() => showToast('请先添加家庭成员', 'error')}
+        onEmptyMembers={() => showToast('当前没有在线成员', 'error')}
       />
       <Toast toast={toast} onClose={() => setToast(null)} />
     </PageContainer>

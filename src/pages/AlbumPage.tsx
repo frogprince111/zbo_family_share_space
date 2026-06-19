@@ -568,7 +568,7 @@ export default function AlbumPage() {
             }}
           >
             <Pencil size={16} />
-            重命名
+            编辑文件夹
           </button>
           <button
             type="button"
@@ -585,16 +585,16 @@ export default function AlbumPage() {
       )}
 
       {previewPhoto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8" onClick={() => setPreviewPhoto(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-slate-950/80 px-4 py-8" onClick={() => setPreviewPhoto(null)}>
           <section
-            className="flex max-h-full max-w-5xl items-center justify-center"
+            className="flex min-h-full min-w-full items-center justify-center"
             role="dialog"
             aria-modal="true"
             aria-label="查看原图"
             onClick={(event) => event.stopPropagation()}
           >
             <div
-              className={`relative inline-block max-h-[82vh] max-w-[92vw] overflow-hidden rounded-2xl leading-none shadow-soft ${
+              className={`relative inline-block overflow-visible rounded-2xl leading-none shadow-soft ${
                 previewDragging ? 'cursor-grabbing' : 'cursor-grab'
               }`}
               style={{ touchAction: 'none' }}
@@ -612,9 +612,11 @@ export default function AlbumPage() {
                 src={previewPhoto.src}
                 alt={previewPhoto.name}
                 draggable={false}
-                className="block h-auto w-auto max-h-[82vh] max-w-[92vw] select-none object-contain"
+                className="block h-auto w-auto select-none rounded-2xl object-contain"
                 style={{
-                  transform: `translate(${previewOffset.x}px, ${previewOffset.y}px) scale(${previewScale})`,
+                  maxWidth: `${Math.max(92, 92 * previewScale)}vw`,
+                  maxHeight: `${Math.max(82, 82 * previewScale)}vh`,
+                  transform: `translate(${previewOffset.x}px, ${previewOffset.y}px)`,
                   transformOrigin: 'center center',
                 }}
               />

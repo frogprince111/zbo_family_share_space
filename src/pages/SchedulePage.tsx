@@ -378,13 +378,13 @@ export default function SchedulePage() {
             const hasEvents = Boolean(cell.dateKey && calendarEventsByDate[cell.dateKey]?.length)
             const hasActiveTasks = hasEvents && cell.dateKey >= todayKey
             const isToday = cell.dateKey === todayKey
-            if (!cell.dateKey) return <div key={cell.key} className="min-h-16 rounded-2xl" />
+            if (!cell.dateKey) return <div key={cell.key} className="min-h-12 rounded-xl sm:min-h-16 sm:rounded-2xl" />
 
             return (
               <button
                 key={cell.key}
                 type="button"
-                className={`min-h-20 cursor-pointer rounded-2xl border px-2 py-3 text-left transition hover:-translate-y-0.5 active:scale-95 ${
+                className={`min-h-14 cursor-pointer rounded-xl border px-1 py-2 text-left transition hover:-translate-y-0.5 active:scale-95 sm:min-h-20 sm:rounded-2xl sm:px-2 sm:py-3 ${
                   hasActiveTasks
                     ? 'border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
                     : isToday
@@ -393,15 +393,15 @@ export default function SchedulePage() {
                 }`}
                 onClick={() => openDateModal(cell.dateKey)}
               >
-                <span className="block text-center font-bold">{cell.day}</span>
+                <span className="block text-center text-sm font-bold sm:text-base">{cell.day}</span>
                 {hasEvents && (
-                  <span className="mt-2 flex flex-col items-center gap-1" aria-label="当天有日程">
+                  <span className="mt-1 flex flex-col items-center gap-0.5 sm:mt-2 sm:gap-1" aria-label="当天有日程">
                     {isToday ? (
-                      <Star size={18} className="text-rose-500" fill="currentColor" strokeWidth={2.2} />
+                      <Star size={15} className="text-rose-500 sm:h-[18px] sm:w-[18px]" fill="currentColor" strokeWidth={2.2} />
                     ) : (
-                      <span className="h-2.5 w-2.5 rounded-full bg-rose-500 shadow-sm" />
+                      <span className="h-2 w-2 rounded-full bg-rose-500 shadow-sm sm:h-2.5 sm:w-2.5" />
                     )}
-                    <span className="text-[11px] font-semibold text-blue-600">{calendarEventsByDate[cell.dateKey].length} 项</span>
+                    <span className="text-[10px] font-semibold leading-4 text-blue-600 sm:text-[11px]">{calendarEventsByDate[cell.dateKey].length} 项</span>
                   </span>
                 )}
               </button>
