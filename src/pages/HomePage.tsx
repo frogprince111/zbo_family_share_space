@@ -6,9 +6,11 @@ import { FamilyMembers } from '../components/FamilyMembers'
 import { HarmonyTips } from '../components/HarmonyTips'
 import { Header } from '../components/Header'
 import { MemberFormModal } from '../components/MemberFormModal'
+import { OnlineVisitorsPanel } from '../components/OnlineVisitorsPanel'
 import { PageContainer } from '../components/PageContainer'
 import { Toast, type ToastState } from '../components/Toast'
 import type { MemberPresenceMap } from '../hooks/useMemberPresence'
+import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
 import type { FamilyMember, FamilyProfile } from '../types/member'
 
 type HomePageProps = {
@@ -24,6 +26,7 @@ export default function HomePage({ members, setMembers, memberPresence, familyPr
   const [formOpen, setFormOpen] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<FamilyMember | null>(null)
   const [choreDiceOpen, setChoreDiceOpen] = useState(false)
+  const onlineVisitors = useOnlineVisitors()
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type })
@@ -62,6 +65,16 @@ export default function HomePage({ members, setMembers, memberPresence, familyPr
         onEdit={(member) => {
           setEditingMember(member)
           setFormOpen(true)
+        }}
+      />
+      <OnlineVisitorsPanel
+        visitors={onlineVisitors.visitors}
+        currentVisitorId={onlineVisitors.currentVisitorId}
+        visitorName={onlineVisitors.visitorName}
+        cloudEnabled={onlineVisitors.cloudEnabled}
+        onRename={(name) => {
+          onlineVisitors.updateVisitorName(name)
+          showToast('在线名称已更新')
         }}
       />
       <MemberFormModal

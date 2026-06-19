@@ -3,6 +3,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "node server/index.js",
     "preview": "vite preview",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:copy": "npm run build && npx cap copy",

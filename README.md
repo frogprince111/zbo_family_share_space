@@ -12,6 +12,7 @@
 - lucide-react
 - localStorage / Capacitor Preferences 本地数据持久化
 - Capacitor Android / iOS 原生封装
+- Node.js 在线人员服务
 
 ## 功能模块
 
@@ -20,6 +21,7 @@
 - 自定义共享空间名称和家庭地址
 - 家庭成员展示
 - 成员在线状态展示：头像彩色表示在线，灰白表示离线
+- 固定链接在线人员展示：打开同一个 Render 链接的人会显示在线，并可编辑自己的在线名称
 - “非你莫属”家务幸运星功能
 - 家庭群聊入口
 
@@ -101,7 +103,7 @@ npm run preview
 
 ## 固定网页访问链接
 
-项目已配置 Render 静态站点部署。将仓库导入 Render 后，Render 会执行 `npm ci && npm run build` 并发布 `dist`。
+项目已配置 Render Web Service 部署。服务会先执行 `npm ci && npm run build` 生成 `dist`，再用 `npm start` 启动 Node 服务托管前端页面和在线人员接口。
 
 Render 发布后会生成固定公网地址，通常类似：
 
@@ -112,10 +114,12 @@ https://zbo-family-share-space.onrender.com
 Render 新建服务时选择：
 
 ```text
-New -> Static Site -> frogprince111/zbo_family_share_space
+New -> Web Service -> frogprince111/zbo_family_share_space
 ```
 
-仓库中的 `render.yaml` 已包含构建命令和发布目录配置。
+仓库中的 `render.yaml` 已包含构建命令和启动命令配置。
+
+如果之前已经创建成 Static Site，需要在 Render 里删除旧服务或重新创建一个 Web Service。在线人员功能依赖 `/api/online` 和 `/api/online/stream`，纯静态站点无法保存跨设备在线状态。
 
 ## 手机 App 构建
 
@@ -222,6 +226,8 @@ src/
   pages/            页面模块
   types/            类型定义
   utils/            工具函数
+server/
+  index.js          Render 生产服务，托管页面并提供在线人员接口
 ```
 
 ## 数据说明
@@ -236,7 +242,9 @@ src/
 - 理财账单
 - 群聊消息
 
-后续如果要做成正式 App，可以将这些数据迁移到后端数据库，并接入登录、实时在线状态、推送通知、云相册和多人实时聊天。
+固定链接在线人员使用 Render 上的 Node 服务内存保存，适合显示“当前谁打开了链接”。服务重启、重新部署或 Render 免费实例休眠后，在线名单会重新统计。
+
+后续如果要做成正式 App，可以将这些数据迁移到后端数据库，并接入登录、推送通知、云相册和多人实时聊天。
 
 删除 App 会删除本机数据。当前版本暂未实现云端同步。
 
