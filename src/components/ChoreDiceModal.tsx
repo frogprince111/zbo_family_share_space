@@ -103,7 +103,12 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
           </button>
         </div>
 
-        <div className="relative mt-7 overflow-hidden rounded-[22px] bg-family-primarySoft p-6 text-center">
+        <button
+          type="button"
+          className="relative mt-7 w-full cursor-pointer overflow-hidden rounded-[22px] bg-family-primarySoft p-6 text-center transition hover:-translate-y-0.5 hover:shadow-soft active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-90"
+          disabled={rolling}
+          onClick={drawLuckyStar}
+        >
           {celebrating && (
             <div className="pointer-events-none absolute inset-0" aria-hidden="true">
               <PartyPopper className="party-popper-left absolute bottom-4 left-2 text-family-primary sm:left-4" size={96} />
@@ -132,9 +137,9 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
             <Star size={44} fill="currentColor" />
           </div>
           <p className="mt-4 text-sm text-family-muted">
-            {rolling ? '正在抽取今天的幸运星...' : '点击按钮，从在线成员里挑选今天的英雄'}
+            {rolling ? '正在抽取今天的幸运星...' : '点这里，从在线成员里挑选今天的英雄'}
           </p>
-        </div>
+        </button>
 
         <div className="mt-6">
           <p className="text-sm font-semibold text-family-text">参与成员</p>
@@ -157,25 +162,6 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
           ) : (
             <p className="pt-5 text-sm text-family-muted">还没有抽取幸运星，先来一次吧。</p>
           )}
-        </div>
-
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            type="button"
-            className="cursor-pointer rounded-xl border border-family-border px-4 py-2 text-sm font-semibold text-family-muted hover:bg-slate-50 active:scale-95"
-            onClick={onClose}
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            disabled={rolling}
-            className="flex cursor-pointer items-center gap-2 rounded-xl bg-family-primary px-5 py-2 text-sm font-semibold text-white hover:bg-violet-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
-            onClick={drawLuckyStar}
-          >
-            <Sparkles size={18} />
-            {rolling ? '抽取中...' : '抽取幸运星'}
-          </button>
         </div>
       </section>
     </div>
