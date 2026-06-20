@@ -51,7 +51,6 @@ export function Header({
 
         {menuOpen && (
           <div className="absolute right-0 top-12 flex items-center gap-2 rounded-[22px] border border-white/70 bg-white/95 p-2 shadow-soft">
-            <NotificationBell />
             <button
               type="button"
               aria-label={soundEnabled ? '关闭提示音' : '开启提示音'}
@@ -85,10 +84,16 @@ export function Header({
       </div>
 
       <div className="grid min-w-0 grid-cols-[auto_1fr] items-center gap-3 pr-12 sm:flex sm:gap-6 sm:pr-14">
-        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-family-primary sm:h-20 sm:w-20">
-          <HousePlus size={50} strokeWidth={2.3} className="sm:h-[70px] sm:w-[70px]" />
-          <Heart className="absolute bottom-3 left-1/2 -translate-x-1/2 text-family-primary sm:bottom-4" size={16} fill="white" />
-        </div>
+        <NotificationBell
+          buttonClassName="relative flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-2xl text-family-primary transition active:scale-95 sm:h-20 sm:w-20"
+          dotClassName="absolute right-0 top-0 h-3.5 w-3.5 rounded-full bg-rose-500 ring-2 ring-white sm:right-1 sm:top-1 sm:h-4 sm:w-4"
+          trigger={
+            <>
+              <HousePlus size={50} strokeWidth={2.3} className="sm:h-[70px] sm:w-[70px]" />
+              <Heart className="absolute bottom-3 left-1/2 -translate-x-1/2 text-family-primary sm:bottom-4" size={16} fill="white" />
+            </>
+          }
+        />
         <div className="min-w-0">
           <h1 className="text-3xl font-black leading-tight tracking-normal text-family-text sm:text-5xl">{spaceName || '家庭共享空间'}</h1>
           <p className="mt-2 truncate text-base text-family-muted sm:mt-3 sm:text-xl">一起管理家庭生活，让爱更有序</p>

@@ -46,9 +46,12 @@ export function FamilyActivityModal({ open, activities, currentUser, onClose, on
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-900/25 px-4 pb-4 sm:items-center sm:pb-0" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-6 pb-[calc(108px+env(safe-area-inset-bottom))] sm:pb-6"
+      onMouseDown={onClose}
+    >
       <section
-        className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[24px] bg-white p-6 shadow-soft sm:p-7"
+        className="max-h-[calc(100dvh-132px-env(safe-area-inset-bottom))] w-full max-w-3xl overflow-y-auto rounded-[24px] bg-white p-6 shadow-soft sm:max-h-[88vh] sm:p-7"
         role="dialog"
         aria-modal="true"
         aria-labelledby="family-activity-title"

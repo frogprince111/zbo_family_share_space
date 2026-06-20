@@ -72,9 +72,12 @@ export function ChoreDiceModal({ open, members, onClose, onEmptyMembers }: Chore
   const confettiPieces = Array.from({ length: 14 }, (_, index) => index)
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-8" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center overflow-y-auto bg-slate-900/25 px-4 py-6 pb-[calc(108px+env(safe-area-inset-bottom))]"
+      onMouseDown={onClose}
+    >
       <section
-        className="w-full max-w-xl rounded-[24px] bg-white p-6 shadow-soft sm:p-7"
+        className="max-h-[calc(100dvh-132px-env(safe-area-inset-bottom))] w-full max-w-xl overflow-y-auto rounded-[24px] bg-white p-6 shadow-soft sm:max-h-[88vh] sm:p-7"
         role="dialog"
         aria-modal="true"
         aria-labelledby="chore-dice-title"

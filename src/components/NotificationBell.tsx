@@ -1,4 +1,5 @@
 import { Bell, CheckCheck, Trash2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 
@@ -8,7 +9,13 @@ function formatNotificationTime(value: string) {
   return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
-export function NotificationBell() {
+type NotificationBellProps = {
+  trigger?: ReactNode
+  buttonClassName?: string
+  dotClassName?: string
+}
+
+export function NotificationBell({ trigger, buttonClassName, dotClassName }: NotificationBellProps) {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const { notifications, unreadCount, markAllRead, clearAll } = useNotifications()
@@ -27,15 +34,21 @@ export function NotificationBell() {
       <button
         type="button"
         aria-label="查看通知"
-        className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-slate-600 hover:bg-white hover:text-family-primary active:scale-95"
+        className={
+          buttonClassName ||
+          'relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-slate-600 hover:bg-white hover:text-family-primary active:scale-95'
+        }
         onClick={() => {
           setOpen((current) => !current)
           if (!open) markAllRead()
         }}
       >
-        <Bell size={28} />
+        {trigger || <Bell size={28} />}
         {unreadCount > 0 && (
-          <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white" aria-label={`${unreadCount}条未读通知`} />
+          <span
+            className={dotClassName || 'absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white'}
+            aria-label={`${unreadCount}条未读通知`}
+          />
         )}
       </button>
 
