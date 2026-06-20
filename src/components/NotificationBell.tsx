@@ -53,7 +53,7 @@ export function NotificationBell({ trigger, buttonClassName, dotClassName }: Not
       </button>
 
       {open && (
-        <section className="fixed left-4 right-4 top-24 z-[1300] max-h-[70vh] overflow-hidden rounded-[22px] border border-family-border bg-white shadow-soft sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[min(86vw,360px)]">
+        <section className="fixed left-4 right-4 top-24 z-[1300] max-h-[70vh] overflow-hidden rounded-[22px] border border-family-border bg-white shadow-soft sm:left-6 sm:right-auto sm:top-28 sm:w-[360px]">
           <div className="flex items-center justify-between gap-3 border-b border-family-border px-4 py-3">
             <div>
               <h2 className="text-base font-black text-family-text">新消息</h2>

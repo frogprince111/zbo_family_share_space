@@ -46,6 +46,11 @@ type BigDataCloudAddress = {
   }
 }
 
+function isUsefulLocalName(name?: string) {
+  if (!name) return false
+  return !/亚洲|亚细亚|中国|China|Asia|省$|自治区$|特别行政区$|国家|continent|country/i.test(name)
+}
+
 function uniqueParts(parts: Array<string | undefined>) {
   const seen = new Set<string>()
   return parts
@@ -64,20 +69,19 @@ function compactDisplayName(displayName: string) {
     .map((part) => part.trim())
     .filter(Boolean)
     .reverse()
-    .filter((part) => !/中国|China/i.test(part))
-    .slice(0, 6)
+    .filter(isUsefulLocalName)
+    .slice(-4)
     .join(' ')
 }
 
 function formatAddress(address?: NominatimAddress, displayName = '') {
   if (address) {
-    const province = address.province || address.state
     const city = address.city || address.town || address.village
     const district = address.county || address.district || address.city_district || address.suburb
-    const street = address.neighbourhood
+    const community = address.neighbourhood || address.suburb
     const road = address.road || address.pedestrian || address.footway || address.residential
     const houseNumber = address.house_number
-    const ordered = uniqueParts([province, city, district, street, road, houseNumber])
+    const ordered = uniqueParts([city, district, community, road, houseNumber]).filter(isUsefulLocalName)
     if (ordered.length > 0) return ordered.join(' ')
   }
 
@@ -103,20 +107,23 @@ async function reverseGeocode(latitude: number, longitude: number) {
 function formatBigDataCloudAddress(data: BigDataCloudAddress) {
   const administrative = [...(data.localityInfo?.administrative || [])]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((item) => /city|county|district|locality|municipality|prefecture/i.test(item.description || ''))
     .map((item) => item.name)
-    .filter((name) => name && !/中国|China/i.test(name))
+    .filter(isUsefulLocalName)
   const informative = [...(data.localityInfo?.informative || [])]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    .filter((item) => /neighbourhood|neighborhood|suburb|quarter|road|street|residential|village|locality/i.test(item.description || ''))
     .map((item) => item.name)
-    .filter((name) => name && !/中国|China/i.test(name))
+    .filter(isUsefulLocalName)
 
   const ordered = uniqueParts([
-    data.principalSubdivision,
     data.city,
     ...administrative,
     data.locality,
     ...informative,
-  ]).slice(0, 6)
+  ])
+    .filter(isUsefulLocalName)
+    .slice(0, 4)
 
   return ordered.join(' ')
 }
