@@ -1,0 +1,113 @@
+家庭共享空间项目优化操作流程
+
+一、项目误删后重新下载
+
+1. 打开终端，进入想保存项目的位置：
+
+cd ~/Documents
+
+2. 从 GitHub 克隆项目：
+
+git clone https://github.com/frogprince111/zbo_family_share_space.git
+
+3. 进入项目目录：
+
+cd zbo_family_share_space
+
+4. 安装项目依赖：
+
+npm install
+
+5. 启动本地预览：
+
+npm run dev
+
+6. 浏览器打开终端显示的本地地址，一般是：
+
+http://localhost:5173/
+
+
+二、项目还在，只是想同步 GitHub 最新版本
+
+1. 进入项目目录：
+
+cd ~/Documents/zbo_family_share_space
+
+2. 拉取 GitHub 最新代码：
+
+git pull origin main
+
+3. 如有依赖变化，重新安装依赖：
+
+npm install
+
+4. 启动本地预览：
+
+npm run dev
+
+
+三、修改项目后的检查步骤
+
+1. 修改代码后，先执行构建检查：
+
+npm run build
+
+2. 如果构建成功，再继续提交。
+
+3. 如果构建失败，先根据报错修复问题，再重新执行：
+
+npm run build
+
+
+四、提交并上传到 GitHub
+
+1. 查看当前修改：
+
+git status
+
+2. 暂存所有修改：
+
+git add .
+
+3. 创建提交，提交说明要写清楚本次改了什么：
+
+git commit -m "说明这次修改了什么"
+
+4. 推送到 GitHub：
+
+git push origin main
+
+
+五、Render 自动部署
+
+1. 项目推送到 GitHub 后，Render 会自动检测 main 分支更新。
+
+2. Render 开始重新部署。
+
+3. 等 Render 后台显示 Deployed 后，公网固定链接就是最新版本。
+
+4. 如果页面没有立刻更新，可以刷新浏览器，或者等待一两分钟后再打开。
+
+
+六、常用完整流程
+
+每次优化项目后，可以按下面顺序操作：
+
+npm run build
+git status
+git add .
+git commit -m "本次优化说明"
+git push origin main
+
+
+七、注意事项
+
+1. GitHub 保存的是项目代码，不保存手机或浏览器里的本地缓存数据。
+
+2. 如果误删本地项目，只要 GitHub 上有代码，就可以重新 clone 回来。
+
+3. 不要把密码、令牌、证书、密钥提交到 GitHub。
+
+4. 如果 Render 部署失败，先查看 Render 的部署日志，再根据报错修复。
+
+5. 修改完项目后，一定先执行 npm run build，确认没有构建错误再上传。
