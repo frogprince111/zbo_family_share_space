@@ -40,7 +40,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <section className="absolute right-0 top-14 z-[1300] w-[min(86vw,360px)] overflow-hidden rounded-[22px] border border-family-border bg-white shadow-soft">
+        <section className="fixed left-4 right-4 top-24 z-[1300] max-h-[70vh] overflow-hidden rounded-[22px] border border-family-border bg-white shadow-soft sm:absolute sm:left-auto sm:right-0 sm:top-14 sm:w-[min(86vw,360px)]">
           <div className="flex items-center justify-between gap-3 border-b border-family-border px-4 py-3">
             <div>
               <h2 className="text-base font-black text-family-text">新消息</h2>
@@ -66,7 +66,7 @@ export function NotificationBell() {
             </div>
           </div>
 
-          <div className="max-h-[360px] overflow-y-auto p-2">
+          <div className="max-h-[calc(70vh-74px)] overflow-y-auto p-2 sm:max-h-[360px]">
             {notifications.length === 0 ? (
               <p className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm font-bold text-family-muted">还没有新的消息</p>
             ) : (

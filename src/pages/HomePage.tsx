@@ -17,6 +17,7 @@ import type { MemberPresenceMap } from '../hooks/useMemberPresence'
 import { useOnlineVisitors } from '../hooks/useOnlineVisitors'
 import { useRealtimeChat } from '../hooks/useRealtimeChat'
 import { useSoundSetting } from '../hooks/useSoundSetting'
+import { useLocalStorage } from '../hooks/useLocalStorage'
 import { locateReadableAddress } from '../services/location'
 import { addNotification } from '../services/notifications'
 import type { FamilyMember, FamilyProfile } from '../types/member'
@@ -38,6 +39,7 @@ export default function HomePage({ setMembers, familyProfile, setFamilyProfile }
   const [onlineNameOpen, setOnlineNameOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
   const [locatingAddress, setLocatingAddress] = useState(false)
+  const [themeMode, setThemeMode] = useLocalStorage<'day' | 'night'>('home-theme-mode', 'day')
   const onlineVisitors = useOnlineVisitors()
   const realtimeChat = useRealtimeChat()
   const soundSetting = useSoundSetting()
@@ -111,7 +113,7 @@ export default function HomePage({ setMembers, familyProfile, setFamilyProfile }
   }
 
   return (
-    <PageContainer>
+    <PageContainer className={`home-theme-page ${themeMode === 'night' ? 'home-theme-night' : 'home-theme-day'}`}>
       <Header
         spaceName={familyProfile.spaceName}
         address={familyProfile.address}
@@ -119,6 +121,8 @@ export default function HomePage({ setMembers, familyProfile, setFamilyProfile }
         locatingAddress={locatingAddress}
         soundEnabled={soundSetting.enabled}
         onToggleSound={soundSetting.toggle}
+        themeMode={themeMode}
+        onToggleTheme={() => setThemeMode((current) => (current === 'day' ? 'night' : 'day'))}
       />
       <HarmonyTips onOpenChoreDice={() => setChoreDiceOpen(true)} onOpenActivity={() => setActivityOpen(true)} />
       <FamilyMembers
